@@ -1,7 +1,7 @@
 from app.workers.celery_worker import celery_app
 from app.core.database import SessionLocal
 from app.models.form import Form
-from app.models.response import Response
+from app.models.form_response import FormResponse
 import openpyxl
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
@@ -12,7 +12,7 @@ def generate_excel_export(form_id: str):
     db = SessionLocal()
     try:
         form = db.query(Form).filter(Form.id == form_id).first()
-        responses = db.query(Response).filter(Response.form_id == form_id).all()
+        responses = db.query(FormResponse).filter(FormResponse.form_id == form_id).all()
         
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -41,7 +41,7 @@ def generate_pdf_export(form_id: str):
     db = SessionLocal()
     try:
         form = db.query(Form).filter(Form.id == form_id).first()
-        responses = db.query(Response).filter(Response.form_id == form_id).all()
+        responses = db.query(FormResponse).filter(FormResponse.form_id == form_id).all()
 
         file_path = f"export_{form_id}.pdf"
         doc = SimpleDocTemplate(file_path, pagesize=letter)

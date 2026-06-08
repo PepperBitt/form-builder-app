@@ -1,19 +1,21 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
+from app.core.config import get_settings
 
-SQLALCHEMY_DATABASE_URL = "postgresql://neondb_owner:npg_9riwsc1qMWRB@ep-holy-moon-a1n3d9e7.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+settings = get_settings()
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, 
-    pool_pre_ping=True,  # Pings the DB to check if it's awake before querying
-    pool_recycle=300     # Recycles connections older than 5 minutes
+    settings.DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=300,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-
 Base = declarative_base()
+
+
 def get_db():
     db = SessionLocal()
     try:

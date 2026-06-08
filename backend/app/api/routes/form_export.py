@@ -1,28 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user
-from app.models.form_response import FormResponse
+from app.core.dependencies import get_current_user, get_optional_user
 from app.models.user import User
+from app.models.form_response import FormResponse
 from app.schemas.user_schema import ErrorResponse
 from app.services import export_service, form_service
 
 router = APIRouter()
 
 
-def _get_form_responses(db: Session, form_id: str):
-    form = form_service.get_form_or_404(db, form_id)
-    responses = db.query(FormResponse).filter(FormResponse.form_id == form_id).all()
-    return form, responses
-
-
-def _authorized_export(
-    db: Session,
-    form_id: str,
-    current_user: User,
-):
+def _authorized_export(db: Session, form_id: str, current_user: User):
     form = form_service.get_form_or_404(db, form_id)
     form_service.ensure_form_owner(form, current_user)
     responses = db.query(FormResponse).filter(FormResponse.form_id == form_id).all()
@@ -30,7 +20,7 @@ def _authorized_export(
 
 
 @router.get(
-    "/{form_id}/json",
+    "/{form_id}/export/json",
     responses={
         401: {"model": ErrorResponse},
         403: {"model": ErrorResponse},
@@ -38,7 +28,7 @@ def _authorized_export(
     },
     summary="Export form and responses as JSON",
 )
-def export_responses_json(
+def export_form_json(
     form_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -53,7 +43,7 @@ def export_responses_json(
 
 
 @router.get(
-    "/{form_id}/csv",
+    "/{form_id}/export/csv",
     responses={
         401: {"model": ErrorResponse},
         403: {"model": ErrorResponse},
@@ -61,7 +51,7 @@ def export_responses_json(
     },
     summary="Export form responses as CSV",
 )
-def export_responses_csv(
+def export_form_csv(
     form_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -76,7 +66,7 @@ def export_responses_csv(
 
 
 @router.get(
-    "/{form_id}/pdf",
+    "/{form_id}/export/pdf",
     responses={
         401: {"model": ErrorResponse},
         403: {"model": ErrorResponse},
@@ -84,7 +74,7 @@ def export_responses_csv(
     },
     summary="Export form responses as PDF",
 )
-def export_responses_pdf(
+def export_form_pdf(
     form_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -95,27 +85,4 @@ def export_responses_pdf(
         path=file_path,
         filename=f"{form.title}_responses.pdf",
         media_type="application/pdf",
-    )
-
-
-@router.get(
-    "/{form_id}/excel",
-    responses={
-        401: {"model": ErrorResponse},
-        403: {"model": ErrorResponse},
-        404: {"model": ErrorResponse},
-    },
-    summary="Export form responses as Excel (legacy path)",
-)
-def export_responses_excel(
-    form_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    form, responses = _authorized_export(db, form_id, current_user)
-    file_path = export_service.export_form_excel(form, responses)
-    return FileResponse(
-        path=file_path,
-        filename=f"{form.title}_responses.xlsx",
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )

@@ -1,0 +1,29 @@
+{
+  "form": {
+    "id": "c9c946f1-2500-4dbe-9410-7205cc5d0db4",
+    "title": "Export Test",
+    "description": null,
+    "status": "published",
+    "schema": {
+      "fields": [
+        {
+          "type": "text",
+          "label": "Answer",
+          "required": true,
+          "options": null
+        }
+      ]
+    },
+    "created_at": "2026-06-10T15:07:18.046549",
+    "updated_at": "2026-06-10T15:07:18.046549"
+  },
+  "responses": [
+    {
+      "id": "598cb5ec-9e10-439e-a092-68993f15b3be",
+      "submitted_at": "2026-06-10T15:07:18.063598",
+      "answers": {
+        "Answer": "Yes"
+      }
+    }
+  ]
+}
