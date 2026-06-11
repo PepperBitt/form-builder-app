@@ -32,6 +32,14 @@ flutter_app/macos/Flutter/ephemeral/
 flutter_app/windows/flutter/ephemeral/
 flutter_app/linux/flutter/ephemeral/
 
+# Generated plugin registrant files
+flutter_app/ios/Runner/GeneratedPluginRegistrant.*
+flutter_app/macos/Flutter/GeneratedPluginRegistrant.swift
+flutter_app/linux/flutter/generated_plugin_registrant.*
+flutter_app/linux/flutter/generated_plugins.cmake
+flutter_app/windows/flutter/generated_plugin_registrant.*
+flutter_app/windows/flutter/generated_plugins.cmake
+
 # OS / IDE
 
 .DS_Store
