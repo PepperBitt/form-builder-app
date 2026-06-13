@@ -112,7 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Expanded(
                           child: _StatCard(
                             label: 'TOTAL RESPONSES',
-                            value: '12,482',
+                            value: forms.totalResponses.toString(),
                             trend: '+18.4% from last month',
                             trendPositive: true,
                           ),
