@@ -5,7 +5,7 @@ from functools import lru_cache
 class Settings:
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://postgres:postgres@localhost:5432/formsdb",
+        "postgresql://postgres:admin123@localhost:5432/formsdb",
     )
     SECRET_KEY: str = os.getenv(
         "SECRET_KEY", "your-super-secret-key-change-in-production"
