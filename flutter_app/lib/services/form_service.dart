@@ -50,16 +50,26 @@ class FormService {
     return res['form_id'] as String;
   }
 
-  /// GET /api/forms/ — list summary of all forms.
+  /// GET /api/forms/drafts - list the current user's draft forms.
   Future<List<FormModel>> listForms() async {
-    final res = await _api.get(ApiConstants.listForms) as List<dynamic>;
-    return res.map((item) {
+    final res = await _api.get(ApiConstants.listForms);
+    final items = res is Map<String, dynamic>
+        ? (res['items'] as List<dynamic>? ?? const [])
+        : res as List<dynamic>;
+
+    return items.map((item) {
       final m = item as Map<String, dynamic>;
+      final status = (m['status'] ?? 'draft') as String;
+
       return FormModel(
         id: m['form_id'] as String,
         title: (m['title'] ?? 'Untitled') as String,
+        description: (m['description'] ?? '') as String,
         fields: const [], // list view doesn't include fields; fetch with getForm()
-        createdAt: DateTime.tryParse(m['created_at']?.toString() ?? '') ?? DateTime.now(),
+        isLive: status == 'published',
+        createdAt:
+            DateTime.tryParse(m['created_at']?.toString() ?? '') ??
+                DateTime.now(),
       );
     }).toList();
   }
