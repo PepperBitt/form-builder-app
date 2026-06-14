@@ -89,7 +89,7 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              _form!.isLive ? '● LIVE' : 'PREVIEW',
+              _form!.isLive ? 'LIVE' : 'PREVIEW',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -203,7 +203,7 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
   }
 }
 
-// ── Success Screen ────────────────────────────────────────────────────────
+// Success Screen
 class _SuccessScreen extends StatelessWidget {
   final String formTitle;
   const _SuccessScreen({required this.formTitle});
@@ -259,7 +259,7 @@ class _SuccessScreen extends StatelessWidget {
   }
 }
 
-// ── Architect Logo ─────────────────────────────────────────────────────────
+// Architect Logo
 class _ArchitectLogo extends StatelessWidget {
   const _ArchitectLogo();
 

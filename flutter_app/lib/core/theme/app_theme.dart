@@ -37,6 +37,8 @@ class AppColors {
   // ── Shadows ────────────────────────────────────────────────────────────────
   static const cardShadow = Color(0x0A000000);
   static const navBackground = Color(0xFF0F172A);
+
+  static get success => null;
 }
 
 class AppTheme {

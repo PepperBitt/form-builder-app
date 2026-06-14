@@ -55,7 +55,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onRefresh: () => context.read<FormProvider>().fetchForms(),
         child: CustomScrollView(
           slivers: [
-            // ── Header ──────────────────────────────────────────────────────
+            // Header
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
@@ -120,8 +120,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Expanded(
                           child: _StatCard(
                             icon: Icons.inbox_rounded,
-                            label: 'Total Responses',
+                            label: 'TOTAL RESPONSES',
                             value: forms.totalResponses.toString(),
+                            trend: '+18.4% from last month',
+                            trendPositive: true,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -177,7 +179,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
 
-            // ── Loading state ─────────────────────────────────────────────────
+            // Loading state
             if (forms.isLoading)
               SliverToBoxAdapter(
                 child: Padding(
@@ -191,7 +193,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Loading your forms…',
+                          'Loading your forms...',
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             color: AppColors.textLight,
@@ -214,7 +216,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               )
             else ...[
-              // ── Forms list ─────────────────────────────────────────────────
+              // Forms list
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 sliver: SliverList(
@@ -326,17 +328,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// ── Stat Card ─────────────────────────────────────────────────────────────────
+// Stat Card
 
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final String? trend;
+  final bool trendPositive;
 
   const _StatCard({
     required this.icon,
     required this.label,
     required this.value,
+    this.trend,
+    this.trendPositive = false,
   });
 
   @override
@@ -383,13 +389,24 @@ class _StatCard extends StatelessWidget {
               color: AppColors.textLight,
             ),
           ),
+          if (trend != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              trend!,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: trendPositive ? AppColors.success : AppColors.danger,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-// ── View Toggle Button ────────────────────────────────────────────────────────
+// View Toggle Button
 
 class _ViewToggleBtn extends StatelessWidget {
   final IconData icon;
@@ -420,7 +437,7 @@ class _ViewToggleBtn extends StatelessWidget {
   }
 }
 
-// ── Form Card ─────────────────────────────────────────────────────────────────
+// Form Card
 
 class _FormCard extends StatefulWidget {
   final FormModel form;
@@ -652,7 +669,7 @@ class _FormCardState extends State<_FormCard> {
   }
 }
 
-// ── Status Badge ──────────────────────────────────────────────────────────────
+// Status Badge
 
 class _StatusBadge extends StatelessWidget {
   final bool isLive;
@@ -765,7 +782,7 @@ class _ActivityItem extends StatelessWidget {
 
 
 
-// ── Empty State ───────────────────────────────────────────────────────────────
+// Empty State
 
 class _EmptyFormsState extends StatelessWidget {
   final VoidCallback onCreateTap;
@@ -832,7 +849,7 @@ class _EmptyFormsState extends StatelessWidget {
 
 
 
-// ── User Avatar ───────────────────────────────────────────────────────────────
+// User Avatar
 
 class _UserAvatar extends StatelessWidget {
   final String name;
