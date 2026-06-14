@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Form Builder & Response Management System
 
 Full-stack Form Builder: **FastAPI backend** + **Flutter frontend**, integrated end-to-end.
@@ -286,3 +287,7 @@ Redis is used for caching and performance optimization
 - Backend: FastAPI + SQLAlchemy + PostgreSQL (Neon) + Redis + ReportLab + openpyxl
 - Frontend: Flutter 3.4 + Provider + GoRouter + Google Fonts + http
 - Integration layer: added during this round (CORS, service layer, provider wiring)
+=======
+# form-builder-app
+Full-stack Form Builder and Response Management System built with FastAPI, Flutter, PostgreSQL, Redis, and Docker.
+>>>>>>> cb4782d (Initial commit)

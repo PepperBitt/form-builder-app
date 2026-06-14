@@ -27,14 +27,22 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final forms = context.read<FormProvider>();
-      try {
-        setState(() =>
-            _form = forms.forms.firstWhere((f) => f.id == widget.formId));
-      } catch (_) {
-        if (forms.activeForm != null) setState(() => _form = forms.activeForm);
-      }
+      _loadForm();
     });
+  }
+
+  Future<void> _loadForm() async {
+    final forms = context.read<FormProvider>();
+    final active = forms.activeForm;
+
+    if (active != null && active.id == widget.formId && active.fields.isNotEmpty) {
+      setState(() => _form = active);
+      return;
+    }
+
+    await forms.loadFormById(widget.formId);
+    if (!mounted) return;
+    setState(() => _form = forms.activeForm);
   }
 
   Future<void> _handleSubmit() async {

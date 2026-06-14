@@ -1,106 +1,121 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+
 from app.core.database import get_db
-from app.models.form import Form
-from app.models.response import Response
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-from reportlab.lib import colors
-import openpyxl
-import os
+from app.core.dependencies import get_current_user
+from app.models.form_response import FormResponse
+from app.models.user import User
+from app.schemas.user_schema import ErrorResponse
+from app.services import export_service, form_service
 
 router = APIRouter()
 
-@router.get("/{form_id}/excel")
-def export_responses_excel(form_id: str, db: Session = Depends(get_db)):
-    # 1. Verify the form exists
-    form = db.query(Form).filter(Form.id == form_id).first()
-    if not form:
-        raise HTTPException(status_code=404, detail="Form not found")
 
-    
-    responses = db.query(Response).filter(Response.form_id == form_id).all()
-    
-    
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Form Responses"
+def _get_form_responses(db: Session, form_id: str):
+    form = form_service.get_form_or_404(db, form_id)
+    responses = db.query(FormResponse).filter(FormResponse.form_id == form_id).all()
+    return form, responses
 
-    
-    headers = ["Response ID", "Submitted At"]
-    for field in form.schema_data.get("fields", []):
-        headers.append(field.get("label"))
-    ws.append(headers)
 
-    
-    for r in responses:
-        row = [str(r.id), r.submitted_at.strftime("%Y-%m-%d %H:%M:%S")]
-        for field in form.schema_data.get("fields", []):
-            label = field.get("label")
-            
-            row.append(r.response_data.get(label, ""))
-        ws.append(row)
+def _authorized_export(
+    db: Session,
+    form_id: str,
+    current_user: User,
+):
+    form = form_service.get_form_or_404(db, form_id)
+    form_service.ensure_form_owner(form, current_user)
+    responses = db.query(FormResponse).filter(FormResponse.form_id == form_id).all()
+    return form, responses
 
-    
-    file_path = f"export_{form_id}.xlsx"
-    wb.save(file_path)
 
-    
+@router.get(
+    "/{form_id}/json",
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
+    summary="Export form and responses as JSON",
+)
+def export_responses_json(
+    form_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    form, responses = _authorized_export(db, form_id, current_user)
+    file_path = export_service.export_form_json(form, responses)
     return FileResponse(
-        path=file_path, 
-        filename=f"{form.title}_Responses.xlsx", 
-        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        path=file_path,
+        filename=f"{form.title}_export.json",
+        media_type="application/json",
     )
-@router.get("/{form_id}/pdf")
-def export_responses_pdf(form_id: str, db: Session = Depends(get_db)):
-    print("🚦 1. API Route hit successfully")
-    
-    form = db.query(Form).filter(Form.id == form_id).first()
-    if not form:
-        raise HTTPException(status_code=404, detail="Form not found")
 
-    responses = db.query(Response).filter(Response.form_id == form_id).all()
-    print(f"✅ 2. Fetched form and {len(responses)} responses")
 
-    file_path = f"export_{form_id}.pdf"
-    doc = SimpleDocTemplate(file_path, pagesize=letter)
-    elements = []
-
-    headers = ["ID (Short)", "Date"]
-    for field in form.schema_data.get("fields", []):
-        headers.append(field.get("label"))
-    data = [headers]
-
-    for r in responses:
-        row = [str(r.id)[:8] + "...", r.submitted_at.strftime("%Y-%m-%d")]
-        for field in form.schema_data.get("fields", []):
-            label = field.get("label")
-            
-            row.append(str(r.response_data.get(label, "")).strip())
-        data.append(row)
-        
-    print("✅ 3. Table data mapped successfully")
-
-    t = Table(data)
-    t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.darkgrey),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0,0), (-1,0), 12),
-        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
-        ('GRID', (0,0), (-1,-1), 1, colors.black)
-    ]))
-    
-    elements.append(t)
-    
-    print("⏳ 4. Attempting to build the PDF file... (If it freezes, it stops here)")
-    doc.build(elements)
-    print("✅ 5. PDF built successfully!")
-
+@router.get(
+    "/{form_id}/csv",
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
+    summary="Export form responses as CSV",
+)
+def export_responses_csv(
+    form_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    form, responses = _authorized_export(db, form_id, current_user)
+    file_path = export_service.export_form_csv(form, responses)
     return FileResponse(
-        path=file_path, 
-        filename=f"{form.title}_Responses.pdf", 
-        media_type='application/pdf'
+        path=file_path,
+        filename=f"{form.title}_responses.csv",
+        media_type="text/csv",
+    )
+
+
+@router.get(
+    "/{form_id}/pdf",
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
+    summary="Export form responses as PDF",
+)
+def export_responses_pdf(
+    form_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    form, responses = _authorized_export(db, form_id, current_user)
+    file_path = export_service.export_form_pdf(form, responses)
+    return FileResponse(
+        path=file_path,
+        filename=f"{form.title}_responses.pdf",
+        media_type="application/pdf",
+    )
+
+
+@router.get(
+    "/{form_id}/excel",
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
+    summary="Export form responses as Excel (legacy path)",
+)
+def export_responses_excel(
+    form_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    form, responses = _authorized_export(db, form_id, current_user)
+    file_path = export_service.export_form_excel(form, responses)
+    return FileResponse(
+        path=file_path,
+        filename=f"{form.title}_responses.xlsx",
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )

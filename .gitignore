@@ -1,7 +1,8 @@
 # Backend
+
 backend/venv/
-backend/__pycache__/
-backend/**/__pycache__/
+backend/**pycache**/
+backend/**/**pycache**/
 backend/.env
 backend/*.xlsx
 backend/*.pdf
@@ -11,16 +12,234 @@ backend/app/storage/uploads/*
 
 # Flutter
 flutter_app/.dart_tool/
-flutter_app/build/
 flutter_app/.flutter-plugins
 flutter_app/.flutter-plugins-dependencies
 flutter_app/.packages
 flutter_app/.pub-cache/
 flutter_app/.pub/
+flutter_app/build/
+
+# Flutter Platform Specific
+flutter_app/android/local.properties
+flutter_app/android/key.properties
+flutter_app/ios/Flutter/App.framework
+flutter_app/ios/Flutter/Flutter.framework
+flutter_app/ios/Flutter/Flutter.podspec
+flutter_app/ios/Flutter/Generated.xcconfig
+flutter_app/ios/Flutter/app_framework_info.plist
+flutter_app/ios/Flutter/flutter_export_environment.sh
+flutter_app/macos/Flutter/ephemeral/
+flutter_app/windows/flutter/ephemeral/
+flutter_app/linux/flutter/ephemeral/
+
+# Generated plugin registrant files
+flutter_app/ios/Runner/GeneratedPluginRegistrant.*
+flutter_app/macos/Flutter/GeneratedPluginRegistrant.swift
+flutter_app/linux/flutter/generated_plugin_registrant.*
+flutter_app/linux/flutter/generated_plugins.cmake
+flutter_app/windows/flutter/generated_plugin_registrant.*
+flutter_app/windows/flutter/generated_plugins.cmake
 
 # OS / IDE
+
 .DS_Store
 __MACOSX/
 .idea/
 *.iml
 .vscode/
+
+# Byte-compiled / optimized / DLL files
+
+**pycache**/
+*.py[codz]
+*$py.class
+
+# C extensions
+
+*.so
+
+# Distribution / packaging
+
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+
+*.manifest
+*.spec
+
+# Installer logs
+
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py.cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Django / SQLite
+
+*.db
+db.sqlite3
+db.sqlite3-journal
+
+# Flask
+
+instance/
+.webassets-cache
+
+# Scrapy
+
+.scrapy
+
+# Sphinx
+
+docs/_build/
+
+# PyBuilder
+
+.pybuilder/
+target/
+
+# Jupyter
+
+.ipynb_checkpoints
+
+# IPython
+
+profile_default/
+ipython_config.py
+
+# Environment files
+
+.env
+.envrc
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# PDM
+
+.pdm-python
+.pdm-build/
+
+# Pixi
+
+.pixi
+
+# PEP 582
+
+**pypackages**/
+
+# Celery
+
+celerybeat-schedule
+celerybeat.pid
+
+# Redis
+
+*.rdb
+*.aof
+*.pid
+
+# RabbitMQ
+
+mnesia/
+rabbitmq/
+rabbitmq-data/
+
+# ActiveMQ
+
+activemq-data/
+
+# SageMath
+
+*.sage.py
+
+# Spyder
+
+.spyderproject
+.spyproject
+
+# Rope
+
+.ropeproject
+
+# mkdocs
+
+/site
+
+# mypy
+
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+
+.pyre/
+
+# pytype
+
+.pytype/
+
+# Cython
+
+cython_debug/
+
+# Abstra
+
+.abstra/
+
+# VS Code temp files
+
+tempCodeRunnerFile.py
+
+# Ruff
+
+.ruff_cache/
+
+# PyPI
+
+.pypirc
+
+# Marimo
+
+marimo/_static/
+marimo/_lsp/
+**marimo**/
+
+# Streamlit
+
+.streamlit/secrets.toml

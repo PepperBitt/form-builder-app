@@ -27,7 +27,7 @@ class ApiConstants {
 
   // --- Forms ---
   static const String createForm = '/api/forms/create';
-  static const String listForms = '/api/forms/';
+  static const String listForms = '/api/forms/drafts';
   static String getForm(String id) => '/api/forms/$id';
 
   // --- Responses ---
