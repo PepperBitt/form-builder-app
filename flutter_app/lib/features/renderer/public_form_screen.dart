@@ -26,23 +26,8 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final forms = context.read<FormProvider>();
-      try {
-        final cached = forms.forms.firstWhere((f) => f.id == widget.formId);
-        setState(() => _form = cached);
-        if (cached.fields.isEmpty) {
-          await forms.loadFormById(widget.formId);
-          if (mounted && forms.activeForm != null) {
-            setState(() => _form = forms.activeForm);
-          }
-        }
-      } catch (_) {
-        await forms.loadFormById(widget.formId);
-        if (mounted && forms.activeForm != null) {
-          setState(() => _form = forms.activeForm);
-        }
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadForm();
     });
   }
 
@@ -104,7 +89,7 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              _form!.isLive ? '● LIVE' : 'PREVIEW',
+              _form!.isLive ? 'LIVE' : 'PREVIEW',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -218,7 +203,7 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
   }
 }
 
-// ── Success Screen ────────────────────────────────────────────────────────
+// Success Screen
 class _SuccessScreen extends StatelessWidget {
   final String formTitle;
   const _SuccessScreen({required this.formTitle});
@@ -274,7 +259,7 @@ class _SuccessScreen extends StatelessWidget {
   }
 }
 
-// ── Architect Logo ─────────────────────────────────────────────────────────
+// Architect Logo
 class _ArchitectLogo extends StatelessWidget {
   const _ArchitectLogo();
 

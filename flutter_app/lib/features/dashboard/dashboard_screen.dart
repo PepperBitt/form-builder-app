@@ -60,7 +60,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onRefresh: () => context.read<FormProvider>().fetchForms(),
         child: CustomScrollView(
           slivers: [
-            // ── Header ──────────────────────────────────────────────────────
+            // Header
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
@@ -77,7 +77,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             children: [
                               Text(
                                 firstName.isNotEmpty
-                                    ? 'Good work, $firstName 👋'
+                                    ? 'Good work, $firstName'
                                     : 'Form Overview',
                                 style: GoogleFonts.inter(
                                   fontSize: 22,
@@ -178,7 +178,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
 
-            // ── Loading state ─────────────────────────────────────────────────
+            // Loading state
             if (forms.isLoading)
               SliverToBoxAdapter(
                 child: Padding(
@@ -192,7 +192,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Loading your forms…',
+                          'Loading your forms...',
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             color: AppColors.textLight,
@@ -215,7 +215,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               )
             else ...[
-              // ── Forms list ─────────────────────────────────────────────────
+              // Forms list
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 sliver: SliverList(
@@ -233,7 +233,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
 
-              // ── Recent Activity ────────────────────────────────────────────
+              // Recent Activity
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
@@ -253,7 +253,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         _ActivityItem(
                           message: 'New response received for ',
                           formName: '"Customer Experience 2024"',
-                          time: '2 minutes ago • United States',
+                          time: '2 minutes ago - United States',
                           iconData: Icons.inbox_rounded,
                           iconColor: AppColors.live,
                           iconBg: AppColors.liveBackground,
@@ -262,7 +262,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           message: 'Form ',
                           formName: '"Event Registration"',
                           suffix: ' was updated by Sarah L.',
-                          time: '1 hour ago • Revision #12',
+                          time: '1 hour ago - Revision #12',
                           iconData: Icons.edit_rounded,
                           iconColor: AppColors.draft,
                           iconBg: AppColors.draftBackground,
@@ -270,7 +270,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         _ActivityItem(
                           message: 'Analytics exported for ',
                           formName: '"Product Feedback"',
-                          time: '4 hours ago • PDF Format',
+                          time: '4 hours ago - PDF Format',
                           iconData: Icons.download_rounded,
                           iconColor: AppColors.primary,
                           iconBg: AppColors.primaryLight,
@@ -293,7 +293,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// ── Create Form Button ────────────────────────────────────────────────────────
+// Create Form Button
 
 class _CreateFormButton extends StatefulWidget {
   final VoidCallback onPressed;
@@ -356,7 +356,7 @@ class _CreateFormButtonState extends State<_CreateFormButton> {
   }
 }
 
-// ── Stat Card ─────────────────────────────────────────────────────────────────
+// Stat Card
 
 class _StatCard extends StatelessWidget {
   final IconData icon;
@@ -451,7 +451,7 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ── View Toggle Button ────────────────────────────────────────────────────────
+// View Toggle Button
 
 class _ViewToggleBtn extends StatelessWidget {
   final IconData icon;
@@ -482,7 +482,7 @@ class _ViewToggleBtn extends StatelessWidget {
   }
 }
 
-// ── Form Card ─────────────────────────────────────────────────────────────────
+// Form Card
 
 class _FormCard extends StatefulWidget {
   final FormModel form;
@@ -714,7 +714,7 @@ class _FormCardState extends State<_FormCard> {
   }
 }
 
-// ── Status Badge ──────────────────────────────────────────────────────────────
+// Status Badge
 
 class _StatusBadge extends StatelessWidget {
   final bool isLive;
@@ -755,7 +755,7 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-// ── Activity Card + Item ──────────────────────────────────────────────────────
+// Activity Card + Item
 
 class _ActivityCard extends StatelessWidget {
   final List<Widget> children;
@@ -856,7 +856,7 @@ class _ActivityItem extends StatelessWidget {
   }
 }
 
-// ── Empty State ───────────────────────────────────────────────────────────────
+// Empty State
 
 class _EmptyFormsState extends StatelessWidget {
   final VoidCallback onCreateTap;
@@ -923,7 +923,7 @@ class _EmptyFormsState extends StatelessWidget {
 
 
 
-// ── User Avatar ───────────────────────────────────────────────────────────────
+// User Avatar
 
 class _UserAvatar extends StatelessWidget {
   final String name;
