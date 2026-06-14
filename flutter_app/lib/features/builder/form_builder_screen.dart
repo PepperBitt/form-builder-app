@@ -941,8 +941,8 @@ class _FieldTypeCardState extends State<_FieldTypeCard> {
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
-        width: 85,
-        height: 80,
+        width: 96,
+        height: 90,
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         decoration: BoxDecoration(
           color: AppColors.background,
