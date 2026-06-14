@@ -249,7 +249,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: const TextStyle(
                                 fontSize: 13, color: AppColors.textLight),
                             children: [
-                              TextSpan(text: "New to $appName? "),
+                              const TextSpan(text: "New to $appName? "),
                               WidgetSpan(
                                 child: GestureDetector(
                                   onTap: () => context.go('/signup'),
@@ -321,9 +321,9 @@ class _ArchitectLogo extends StatelessWidget {
       children: [
         _GridIcon(),
         const SizedBox(width: 10),
-        Text(
+        const Text(
           appName,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
             color: AppColors.textDark,

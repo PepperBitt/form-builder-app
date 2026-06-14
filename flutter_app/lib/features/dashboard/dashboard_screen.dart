@@ -34,7 +34,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
-        title: ArchitectLogo(),
+        title: const ArchitectLogo(),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined, color: AppColors.textMed),
@@ -57,14 +57,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header
-                    Row(
+                    const Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Form Overview',
                                 style: TextStyle(
                                   fontSize: 22,
@@ -72,10 +72,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   color: AppColors.textDark,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              SizedBox(height: 4),
                               Text(
                                 'Manage your active forms, analyze response data, and create new architectural data structures.',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   color: AppColors.textLight,
                                 ),
@@ -109,7 +109,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // Stats row
                     Row(
                       children: [
-                        Expanded(
+                        const Expanded(
                           child: _StatCard(
                             label: 'TOTAL RESPONSES',
                             value: '12,482',
@@ -194,18 +194,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _ActivityItem(
+                    const _ActivityItem(
                       message: 'New response received for ',
                       formName: '"Customer Experience 2024"',
                       time: '2 minutes ago • United States',
                     ),
-                    _ActivityItem(
+                    const _ActivityItem(
                       message: 'Form ',
                       formName: '"Event Registration"',
                       time: '1 hour ago • Revision #12',
                       suffix: ' was updated by Sarah L.',
                     ),
-                    _ActivityItem(
+                    const _ActivityItem(
                       message: 'Analytics report exported for ',
                       formName: '"Product Feedback"',
                       time: '4 hours ago • PDF Format',
@@ -598,9 +598,9 @@ class ArchitectLogo extends StatelessWidget {
       children: [
         _GridIcon(),
         const SizedBox(width: 8),
-        Text(
+        const Text(
           appName,
-          style: const TextStyle(
+          style: TextStyle(
               fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textDark),
         ),
       ],

@@ -74,7 +74,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 const SizedBox(height: 20),
 
                 // Key metrics
-                _SectionTitle('Key Metrics'),
+                const _SectionTitle('Key Metrics'),
                 const SizedBox(height: 10),
                 GridView.count(
                   crossAxisCount: 2,
@@ -90,19 +90,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       icon: Icons.inbox_outlined,
                       color: AppColors.primary,
                     ),
-                    _MetricCard(
+                    const _MetricCard(
                       label: 'Completion Rate',
                       value: '87%',
                       icon: Icons.check_circle_outline,
                       color: AppColors.live,
                     ),
-                    _MetricCard(
+                    const _MetricCard(
                       label: 'Avg. Time',
                       value: '2m 34s',
                       icon: Icons.timer_outlined,
-                      color: const Color(0xFF7C3AED),
+                      color: Color(0xFF7C3AED),
                     ),
-                    _MetricCard(
+                    const _MetricCard(
                       label: 'Drop-off Rate',
                       value: '13%',
                       icon: Icons.trending_down_rounded,
@@ -113,9 +113,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 const SizedBox(height: 24),
 
                 // Response trend
-                _SectionTitle('Response Trend'),
+                const _SectionTitle('Response Trend'),
                 const SizedBox(height: 10),
-                _ChartCard(
+                const _ChartCard(
                   child: _BarChart(
                     data: [12, 19, 8, 25, 14, 32, 18, 22, 16, 28, 20, 35],
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -125,7 +125,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 const SizedBox(height: 24),
 
                 // Field breakdown
-                _SectionTitle('Field Breakdown'),
+                const _SectionTitle('Field Breakdown'),
                 const SizedBox(height: 10),
                 ...selectedForm.fields
                     .take(3)
@@ -395,7 +395,7 @@ class _FieldAnalyticsCard extends StatelessWidget {
                     value: responseRate / 100,
                     backgroundColor: AppColors.background,
                     valueColor:
-                        AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        const AlwaysStoppedAnimation<Color>(AppColors.primary),
                     minHeight: 6,
                   ),
                 ),

@@ -138,7 +138,7 @@ class _FormBuilderScreenState extends State<FormBuilderScreen> {
                     fontWeight: FontWeight.w700,
                     color: AppColors.textDark,
                   ),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText: 'Form title...',
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
@@ -221,12 +221,12 @@ class _EmptyCanvas extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   color: AppColors.background,
                 ),
-                child: Column(
+                child: const Column(
                   children: [
-                    const Icon(Icons.add_box_outlined,
+                    Icon(Icons.add_box_outlined,
                         size: 32, color: AppColors.textMuted),
-                    const SizedBox(height: 12),
-                    const Text(
+                    SizedBox(height: 12),
+                    Text(
                       'Drop a field\nhere',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -235,8 +235,8 @@ class _EmptyCanvas extends StatelessWidget {
                         color: AppColors.textDark,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    const Text(
+                    SizedBox(height: 6),
+                    Text(
                       'or click to choose\nfrom the menu',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 12, color: AppColors.textLight),
@@ -635,10 +635,10 @@ class _ArchitectLogo extends StatelessWidget {
       children: [
         _GridIcon(),
         const SizedBox(width: 8),
-        Flexible(
+        const Flexible(
           child: Text(appName,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
         ),
       ],

@@ -120,7 +120,7 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // FIELD LABEL
-                  _Label('FIELD LABEL'),
+                  const _Label('FIELD LABEL'),
                   const SizedBox(height: 5),
                   _Input(
                     controller: _labelCtrl,
@@ -130,7 +130,7 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                   const SizedBox(height: 14),
 
                   // HELPER TEXT
-                  _Label('HELPER TEXT'),
+                  const _Label('HELPER TEXT'),
                   const SizedBox(height: 5),
                   _Input(
                     controller: _helperCtrl,
@@ -145,7 +145,7 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                       field.type == FieldType.checkbox) ...[
                     Row(
                       children: [
-                        _Label('OPTIONS'),
+                        const _Label('OPTIONS'),
                         const Spacer(),
                         GestureDetector(
                           onTap: () {
@@ -216,7 +216,7 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                   if (field.type == FieldType.rating) ...[
                     Row(
                       children: [
-                        _Label('RATING SCALE'),
+                        const _Label('RATING SCALE'),
                         const Spacer(),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -271,9 +271,9 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                       }),
                     ),
                     const SizedBox(height: 6),
-                    Text(
+                    const Text(
                       'Tap a number to set the maximum rating.',
-                      style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      style: TextStyle(fontSize: 11, color: AppColors.textMuted),
                     ),
                     const SizedBox(height: 18),
                   ],
@@ -339,7 +339,7 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                   const SizedBox(height: 10),
 
                   // ── Preview chip ─────────────────────────────────
-                  _Label('QUICK PREVIEW'),
+                  const _Label('QUICK PREVIEW'),
                   const SizedBox(height: 8),
                   _FieldPreview(field: field),
                   const SizedBox(height: 20),
@@ -550,12 +550,12 @@ class _FieldPreview extends StatelessWidget {
 
       case FieldType.date:
         return _previewContainer(
-          child: Row(
+          child: const Row(
             children: [
-              const Icon(Icons.calendar_today_outlined,
+              Icon(Icons.calendar_today_outlined,
                   size: 16, color: AppColors.textMuted),
-              const SizedBox(width: 8),
-              const Text('mm/dd/yyyy',
+              SizedBox(width: 8),
+              Text('mm/dd/yyyy',
                   style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
             ],
           ),

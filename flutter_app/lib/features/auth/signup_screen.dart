@@ -224,9 +224,9 @@ class _ArchitectLogo extends StatelessWidget {
       children: [
         _GridIcon(),
         const SizedBox(width: 10),
-        Text(
+        const Text(
           appName,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
             color: AppColors.textDark,
