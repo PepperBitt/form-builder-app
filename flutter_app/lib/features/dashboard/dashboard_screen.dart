@@ -118,16 +118,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Expanded(
                           child: _StatCard(
-<<<<<<< HEAD
                             icon: Icons.inbox_rounded,
-                            label: 'Total Responses',
-                            value: forms.totalResponses.toString(),
-=======
                             label: 'TOTAL RESPONSES',
                             value: forms.totalResponses.toString(),
                             trend: '+18.4% from last month',
                             trendPositive: true,
->>>>>>> f442cb97373811afd72ea0d7efb74cd9af016a87
                           ),
                         ),
                         const SizedBox(width: 12),

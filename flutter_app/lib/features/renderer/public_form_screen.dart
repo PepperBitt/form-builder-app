@@ -26,10 +26,6 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
   @override
   void initState() {
     super.initState();
-<<<<<<< HEAD
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadForm();
-=======
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final forms = context.read<FormProvider>();
       try {
@@ -47,7 +43,6 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
           setState(() => _form = forms.activeForm);
         }
       }
->>>>>>> f442cb97373811afd72ea0d7efb74cd9af016a87
     });
   }
 
