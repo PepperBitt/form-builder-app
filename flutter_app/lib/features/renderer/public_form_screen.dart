@@ -26,10 +26,8 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
   @override
   void initState() {
     super.initState();
-<<<<<<< HEAD
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadForm();
-=======
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final forms = context.read<FormProvider>();
       try {
@@ -47,7 +45,6 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
           setState(() => _form = forms.activeForm);
         }
       }
->>>>>>> f442cb97373811afd72ea0d7efb74cd9af016a87
     });
   }
 
@@ -109,7 +106,7 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              _form!.isLive ? 'â— LIVE' : 'PREVIEW',
+              _form!.isLive ? 'GùÅ LIVE' : 'PREVIEW',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -223,7 +220,7 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
   }
 }
 
-// â”€â”€ Success Screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// GöÇGöÇ Success Screen GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
 class _SuccessScreen extends StatelessWidget {
   final String formTitle;
   const _SuccessScreen({required this.formTitle});
@@ -279,7 +276,7 @@ class _SuccessScreen extends StatelessWidget {
   }
 }
 
-// â”€â”€ Architect Logo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// GöÇGöÇ Architect Logo GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
 class _ArchitectLogo extends StatelessWidget {
   const _ArchitectLogo();
 
