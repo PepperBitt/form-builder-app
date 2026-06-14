@@ -151,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 ],
 
                                 // Email
-                                _FieldLabel('EMAIL ADDRESS'),
+                                const _FieldLabel('EMAIL ADDRESS'),
                                 const SizedBox(height: 6),
                                 TextFormField(
                                   controller: _emailCtrl,
@@ -181,7 +181,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    _FieldLabel('PASSWORD'),
+                                    const _FieldLabel('PASSWORD'),
                                     TextButton(
                                       onPressed: () {},
                                       style: TextButton.styleFrom(
@@ -333,49 +333,46 @@ class _LoginScreenState extends State<LoginScreen>
                                 ),
                                 const SizedBox(height: 24),
 
-                                // Sign up link
-                                Center(
-                                  child: RichText(
-                                    text: TextSpan(
-                                      style: GoogleFonts.inter(
-                                        fontSize: 13,
-                                        color: AppColors.textLight,
-                                      ),
-                                      children: [
-                                        TextSpan(text: 'New to $appName? '),
-                                        WidgetSpan(
-                                          child: GestureDetector(
-                                            onTap: () =>
-                                                context.go('/signup'),
-                                            child: Text(
-                                              'Create workspace',
-                                              style: GoogleFonts.inter(
-                                                fontSize: 13,
-                                                color: AppColors.primary,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                      // Sign up link
+                      Center(
+                        child: RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                                fontSize: 13, color: AppColors.textLight),
+                            children: [
+                              const TextSpan(text: "New to $appName? "),
+                              WidgetSpan(
+                                child: GestureDetector(
+                                  onTap: () => context.go('/signup'),
+                                  child: const Text(
+                                    'Create workspace',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
-    );
-  }
+    ),
+  ),
+),
+],
+),
+);
+}
 }
 
 // ── Error Banner ──────────────────────────────────────────────────────────────
@@ -457,11 +454,11 @@ class _LightDotGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.border.withValues(alpha: 0.6)
+      ..color = AppColors.border.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
 
-    const spacing = 24.0;
-    const radius = 1.0;
+    const double spacing = 20.0;
+    const double radius = 1.0;
 
     for (double x = 0; x < size.width; x += spacing) {
       for (double y = 0; y < size.height; y += spacing) {
@@ -471,5 +468,5 @@ class _LightDotGridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LightDotGridPainter _) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

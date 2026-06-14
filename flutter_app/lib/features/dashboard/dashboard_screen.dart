@@ -30,18 +30,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final forms = context.watch<FormProvider>();
     final auth = context.watch<AuthProvider>();
     final userName = auth.currentUser?.name ?? '';
-    final firstName = userName.split(' ').first;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
-        title: const AppLogo(size: 26),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.border),
-        ),
+        title: const AppLogo(size: 22),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
@@ -67,8 +62,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Greeting
-                    Row(
+                    // Header
+                    const Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
@@ -76,20 +71,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                firstName.isNotEmpty
-                                    ? 'Good work, $firstName'
-                                    : 'Form Overview',
-                                style: GoogleFonts.inter(
+                                'Form Overview',
+                                style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.textDark,
                                   letterSpacing: -0.3,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              SizedBox(height: 4),
                               Text(
-                                'Manage forms, collect responses, and track insights.',
-                                style: GoogleFonts.inter(
+                                'Manage your active forms, analyze response data, and create new architectural data structures.',
+                                style: TextStyle(
                                   fontSize: 13,
                                   color: AppColors.textLight,
                                   height: 1.5,
@@ -103,13 +96,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 20),
 
                     // Create New Form button
-                    _CreateFormButton(
+                    ElevatedButton.icon(
                       onPressed: () {
                         forms.createNewForm();
                         if (forms.activeForm != null) {
                           context.push('/builder/${forms.activeForm!.id}');
                         }
                       },
+                      icon: const Icon(Icons.add_rounded, size: 20),
+                      label: const Text('Create New Form'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 20),
 
@@ -233,123 +234,94 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
 
-              // Recent Activity
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Recent Activity',
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textDark,
-                        ),
+            // Recent activity
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Recent Activity',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textDark,
                       ),
-                      const SizedBox(height: 12),
-                      _ActivityCard(children: const [
-                        _ActivityItem(
-                          message: 'New response received for ',
-                          formName: '"Customer Experience 2024"',
-                          time: '2 minutes ago - United States',
-                          iconData: Icons.inbox_rounded,
-                          iconColor: AppColors.live,
-                          iconBg: AppColors.liveBackground,
-                        ),
-                        _ActivityItem(
-                          message: 'Form ',
-                          formName: '"Event Registration"',
-                          suffix: ' was updated by Sarah L.',
-                          time: '1 hour ago - Revision #12',
-                          iconData: Icons.edit_rounded,
-                          iconColor: AppColors.draft,
-                          iconBg: AppColors.draftBackground,
-                        ),
-                        _ActivityItem(
-                          message: 'Analytics exported for ',
-                          formName: '"Product Feedback"',
-                          time: '4 hours ago - PDF Format',
-                          iconData: Icons.download_rounded,
-                          iconColor: AppColors.primary,
-                          iconBg: AppColors.primaryLight,
-                          isLast: true,
-                        ),
-                      ]),
+                    ),
+                    const SizedBox(height: 12),
+                    const _ActivityItem(
+                      message: 'New response received for ',
+                      formName: '"Customer Experience 2024"',
+                      time: '2 minutes ago • United States',
+                    ),
+                    const _ActivityItem(
+                      message: 'Form ',
+                      formName: '"Event Registration"',
+                      time: '1 hour ago • Revision #12',
+                      suffix: ' was updated by Sarah L.',
+                    ),
+                    const _ActivityItem(
+                      message: 'Analytics report exported for ',
+                      formName: '"Product Feedback"',
+                      time: '4 hours ago • PDF Format',
+                    ),
+                    const SizedBox(height: 20),
 
-                      const SizedBox(height: 20),
-
-                      const SizedBox(height: 32),
-                    ],
-                  ),
+                    // Upgrade to Pro card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Upgrade to Pro',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Unlock conditional logic, white-labeling and unlimited responses.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {},
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xFF1E3A8A),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                              textStyle: const TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 14),
+                            ),
+                            child: const Text('Upgrade Workspace'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                 ),
               ),
+            ),
             ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// Create Form Button
-
-class _CreateFormButton extends StatefulWidget {
-  final VoidCallback onPressed;
-  const _CreateFormButton({required this.onPressed});
-
-  @override
-  State<_CreateFormButton> createState() => _CreateFormButtonState();
-}
-
-class _CreateFormButtonState extends State<_CreateFormButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: _hovered
-                  ? [const Color(0xFF0EA5E9), const Color(0xFF2563EB)]
-                  : [const Color(0xFF2563EB), const Color(0xFF1D4ED8)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary
-                    .withValues(alpha: _hovered ? 0.30 : 0.18),
-                blurRadius: _hovered ? 18 : 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'Create New Form',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -363,14 +335,14 @@ class _StatCard extends StatelessWidget {
   final String label;
   final String value;
   final String? trend;
-  final bool? trendPositive;
+  final bool trendPositive;
 
   const _StatCard({
     required this.icon,
     required this.label,
     required this.value,
     this.trend,
-    this.trendPositive,
+    this.trendPositive = false,
   });
 
   @override
@@ -417,34 +389,17 @@ class _StatCard extends StatelessWidget {
               color: AppColors.textLight,
             ),
           ),
-          if (trend != null) const SizedBox(height: 8),
-          if (trend != null && trendPositive != null)
-            Row(
-              children: [
-                Icon(
-                  trendPositive! ? Icons.trending_up_rounded : Icons.trending_down_rounded,
-                  size: 13,
-                  color: trendPositive! ? AppColors.live : AppColors.danger,
-                ),
-                const SizedBox(width: 3),
-                Text(
-                  trend!,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: trendPositive! ? AppColors.live : AppColors.danger,
-                  ),
-                ),
-              ],
-            )
-          else if (trend != null)
+          if (trend != null) ...[
+            const SizedBox(height: 8),
             Text(
               trend!,
               style: GoogleFonts.inter(
-                fontSize: 11,
-                color: AppColors.textLight,
+                fontSize: 12,
+                color: trendPositive ? AppColors.success : AppColors.danger,
+                fontWeight: FontWeight.w600,
               ),
             ),
+          ],
         ],
       ),
     );
@@ -755,106 +710,77 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-// Activity Card + Item
-
-class _ActivityCard extends StatelessWidget {
-  final List<Widget> children;
-  const _ActivityCard({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(children: children),
-    );
-  }
-}
+// ── Activity Item ───────────────────────────────────────────────────────────────
 
 class _ActivityItem extends StatelessWidget {
   final String message;
   final String formName;
   final String time;
   final String? suffix;
-  final IconData iconData;
-  final Color iconColor;
-  final Color iconBg;
-  final bool isLast;
 
   const _ActivityItem({
     required this.message,
     required this.formName,
     required this.time,
     this.suffix,
-    required this.iconData,
-    required this.iconColor,
-    required this.iconBg,
-    this.isLast = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(iconData, size: 16, color: iconColor),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        style: GoogleFonts.inter(
-                            fontSize: 13, color: AppColors.textMed),
-                        children: [
-                          TextSpan(text: message),
-                          TextSpan(
-                            text: formName,
-                            style: GoogleFonts.inter(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 13,
-                            ),
-                          ),
-                          if (suffix != null) TextSpan(text: suffix),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      time,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 5),
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
           ),
-        ),
-        if (!isLast) Divider(height: 1, color: AppColors.border),
-      ],
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    style: const TextStyle(
+                        fontSize: 13, color: AppColors.textMed),
+                    children: [
+                      TextSpan(text: message),
+                      TextSpan(
+                        text: formName,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (suffix != null) TextSpan(text: suffix),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  time,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
+
+
 
 // Empty State
 

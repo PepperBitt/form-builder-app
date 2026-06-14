@@ -147,13 +147,13 @@ class _SignupScreenState extends State<SignupScreen>
                             ],
 
                             // Name
-                            _FieldLabel('FULL NAME'),
+                            const _FieldLabel('FULL NAME'),
                             const SizedBox(height: 6),
                             TextFormField(
                               controller: _nameCtrl,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 hintText: 'Your full name',
-                                prefixIcon: const Icon(
+                                prefixIcon: Icon(
                                   Icons.person_outline_rounded,
                                   size: 18,
                                   color: AppColors.textMuted,
@@ -166,7 +166,7 @@ class _SignupScreenState extends State<SignupScreen>
                             const SizedBox(height: 18),
 
                             // Email
-                            _FieldLabel('WORK EMAIL'),
+                            const _FieldLabel('WORK EMAIL'),
                             const SizedBox(height: 6),
                             TextFormField(
                               controller: _emailCtrl,
@@ -192,7 +192,7 @@ class _SignupScreenState extends State<SignupScreen>
                             const SizedBox(height: 18),
 
                             // Password
-                            _FieldLabel('PASSWORD'),
+                            const _FieldLabel('PASSWORD'),
                             const SizedBox(height: 6),
                             TextFormField(
                               controller: _passCtrl,
@@ -372,11 +372,11 @@ class _LightDotGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.border.withValues(alpha: 0.6)
+      ..color = AppColors.border.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
 
-    const spacing = 24.0;
-    const radius = 1.0;
+    const double spacing = 20.0;
+    const double radius = 1.0;
 
     for (double x = 0; x < size.width; x += spacing) {
       for (double y = 0; y < size.height; y += spacing) {
@@ -386,5 +386,6 @@ class _LightDotGridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LightDotGridPainter _) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+

@@ -18,7 +18,7 @@ class ApiConstants {
   ///
   /// For Flutter Web + Docker backend:
   /// Always use localhost:8000
-  static const String baseUrl = 'http://localhost:8000';
+  static const String baseUrl = 'http://192.168.0.48:8000';
 
   // --- Auth (form.py backend uses /api/auth) ---
   // Backend login expects form-data (OAuth2PasswordRequestForm), not JSON.

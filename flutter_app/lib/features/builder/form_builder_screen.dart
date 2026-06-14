@@ -82,643 +82,172 @@ class _FormBuilderScreenState extends State<FormBuilderScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-
-      // ── App Bar ────────────────────────────────────────────────────────────
-      appBar: _BuilderAppBar(
-        form: form,
-        forms: forms,
-        onPreview: () => context.push('/form/${form.id}'),
-        onBack: () => Navigator.pop(context),
-      ),
-
-      // ── Body ───────────────────────────────────────────────────────────────
-      body: Column(
-        children: [
-          // Form meta editor (title + description)
-          _FormMetaEditor(
-            titleCtrl: _titleCtrl,
-            descCtrl: _descCtrl,
-            form: form,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const AppLogo(size: 22),
+        actions: [
+          // Preview button
+          IconButton(
+            icon: const Icon(Icons.visibility_outlined, size: 20, color: AppColors.textMed),
+            onPressed: () => context.push('/form/${form.id}'),
+            tooltip: 'Preview Form',
           ),
-
-          // Main workspace
-          Expanded(
-            child: isNarrow
-                ? _NarrowLayout(
-                    form: form,
-                    forms: forms,
-                    hasSettingsPanel: hasSettingsPanel,
-                    onAddField: () => _openFieldSelector(context),
+          // Save button
+          TextButton(
+            onPressed: forms.isLoading
+                ? null
+                : () async {
+                    final success = await forms.saveForm();
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(success
+                            ? 'Form saved successfully'
+                            : 'Save failed: ${forms.error ?? "Unknown error"}'),
+                        backgroundColor: success ? Colors.green : Colors.red,
+                      ),
+                    );
+                  },
+            child: forms.isLoading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : _WideLayout(
-                    form: form,
-                    forms: forms,
-                    hasSettingsPanel: hasSettingsPanel,
-                    onAddField: () => _openFieldSelector(context),
+                : const Text('Save', style: TextStyle(color: AppColors.primary)),
+          ),
+          // Publish toggle
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: GestureDetector(
+              onTap: () => forms.toggleFormLive(form.id),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: form.isLive ? AppColors.live : AppColors.primary,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  form.isLive ? '● LIVE' : 'Publish',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
-
-      // ── Floating Add Field Button (mobile) ─────────────────────────────────
-      floatingActionButton: isNarrow
-          ? FloatingActionButton.extended(
-              onPressed: () => _openFieldSelector(context),
-              icon: const Icon(Icons.add_rounded),
-              label: Text(
-                'Add Field',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-              ),
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              elevation: 3,
-            )
-          : null,
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// App Bar
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _BuilderAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final FormModel form;
-  final FormProvider forms;
-  final VoidCallback onPreview;
-  final VoidCallback onBack;
-
-  const _BuilderAppBar({
-    required this.form,
-    required this.forms,
-    required this.onPreview,
-    required this.onBack,
-  });
-
-  @override
-  Size get preferredSize => const Size.fromHeight(56);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 56,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(
-            children: [
-              // Back
-              IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 17),
-                color: AppColors.textMed,
-                onPressed: onBack,
-                splashRadius: 20,
-                tooltip: 'Back',
-              ),
-
-              // Logo
-              const AppLogo(size: 22),
-
-              const Spacer(),
-
-              // Status chip
-              _StatusChip(
-                isLive: form.isLive,
-                onTap: () => forms.toggleFormLive(form.id),
-              ),
-
-              const SizedBox(width: 8),
-
-              // Preview
-              _AppBarIconBtn(
-                icon: Icons.open_in_new_rounded,
-                tooltip: 'Preview',
-                onTap: onPreview,
-              ),
-
-              const SizedBox(width: 4),
-
-              // Save
-              _SaveButton(forms: forms),
-
-              const SizedBox(width: 8),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatefulWidget {
-  final bool isLive;
-  final VoidCallback onTap;
-  const _StatusChip({required this.isLive, required this.onTap});
-
-  @override
-  State<_StatusChip> createState() => _StatusChipState();
-}
-
-class _StatusChipState extends State<_StatusChip> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: widget.isLive
-                ? (_hovered
-                    ? AppColors.live.withValues(alpha: 0.85)
-                    : AppColors.live)
-                : (_hovered
-                    ? AppColors.primary.withValues(alpha: 0.85)
-                    : AppColors.primary),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                widget.isLive ? 'Live' : 'Publish',
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AppBarIconBtn extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-  const _AppBarIconBtn(
-      {required this.icon, required this.tooltip, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Icon(icon, size: 17, color: AppColors.textMed),
-        ),
-      ),
-    );
-  }
-}
-
-class _SaveButton extends StatelessWidget {
-  final FormProvider forms;
-  const _SaveButton({required this.forms});
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: forms.isLoading
-          ? null
-          : () async {
-              final success = await forms.saveForm();
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    success
-                        ? 'Form saved!'
-                        : 'Save failed: ${forms.error ?? "Unknown error"}',
-                  ),
-                  backgroundColor: success ? AppColors.live : AppColors.danger,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              );
-            },
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        textStyle:
-            GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
-      ),
-      child: forms.isLoading
-          ? const SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: Colors.white),
-            )
-          : const Text('Save'),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Form Meta Editor (title + description inline, below AppBar)
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _FormMetaEditor extends StatelessWidget {
-  final TextEditingController titleCtrl;
-  final TextEditingController descCtrl;
-  final FormModel form;
-
-  const _FormMetaEditor(
-      {required this.titleCtrl, required this.descCtrl, required this.form});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.surface,
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Stack(
         children: [
-          TextField(
-            controller: titleCtrl,
-            onChanged: (v) => form.title = v,
-            style: GoogleFonts.inter(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textDark,
-              letterSpacing: -0.2,
-            ),
-            decoration: InputDecoration(
-              hintText: 'Untitled Form',
-              hintStyle: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textMuted,
-              ),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              filled: false,
-              contentPadding: EdgeInsets.zero,
-              isDense: true,
-            ),
-          ),
-          const SizedBox(height: 4),
-          TextField(
-            controller: descCtrl,
-            onChanged: (v) => form.description = v,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.textLight,
-              height: 1.4,
-            ),
-            decoration: InputDecoration(
-              hintText: 'Add a description (optional)',
-              hintStyle: GoogleFonts.inter(
-                fontSize: 13,
-                color: AppColors.textMuted,
-              ),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              filled: false,
-              contentPadding: EdgeInsets.zero,
-              isDense: true,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Wide Layout (desktop/tablet ≥ 640px)
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _WideLayout extends StatelessWidget {
-  final FormModel form;
-  final FormProvider forms;
-  final bool hasSettingsPanel;
-  final VoidCallback onAddField;
-
-  const _WideLayout({
-    required this.form,
-    required this.forms,
-    required this.hasSettingsPanel,
-    required this.onAddField,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Left: Field type picker (sidebar) ─────────────────────────────
-        _FieldLibrarySidebar(onAdd: (type) {
-          forms.addField(type);
-        }),
-
-        // ── Center: Canvas ───────────────────────────────────────────────
-        Expanded(
-          flex: 3,
-          child: _BuilderCanvas(
-            form: form,
-            onAddField: onAddField,
-          ),
-        ),
-
-        // ── Right: Settings panel ───────────────────────────────────────
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          transitionBuilder: (child, anim) => SizeTransition(
-            axis: Axis.horizontal,
-            sizeFactor: CurvedAnimation(parent: anim, curve: Curves.easeOut),
-            child: child,
-          ),
-          child: hasSettingsPanel
-              ? SizedBox(
-                  key: const ValueKey('panel'),
-                  width: 280,
-                  child: FieldSettingsPanel(field: forms.selectedField!),
-                )
-              : const SizedBox(key: ValueKey('no-panel'), width: 0),
-        ),
-      ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Narrow Layout (mobile < 640px)
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _NarrowLayout extends StatelessWidget {
-  final FormModel form;
-  final FormProvider forms;
-  final bool hasSettingsPanel;
-  final VoidCallback onAddField;
-
-  const _NarrowLayout({
-    required this.form,
-    required this.forms,
-    required this.hasSettingsPanel,
-    required this.onAddField,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // On mobile: canvas fills, settings panel slides up as bottom sheet
-    return Stack(
-      children: [
-        _BuilderCanvas(form: form, onAddField: onAddField),
-        if (hasSettingsPanel)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.5,
-              ),
-              decoration: BoxDecoration(
+          Column(
+            children: [
+              // Form title editor
+              Container(
                 color: AppColors.surface,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 16,
-                    offset: const Offset(0, -4),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                child: TextField(
+                  controller: _titleCtrl,
+                  onChanged: (v) {
+                    form.title = v;
+                  },
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
                   ),
-                ],
+                  decoration: const InputDecoration(
+                    hintText: 'Form title...',
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: false,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Drag handle
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Container(
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.border,
-                        borderRadius: BorderRadius.circular(2),
+              const Divider(height: 1),
+
+              // Main builder area
+              Expanded(
+                child: Row(
+                  children: [
+                    // Fields canvas
+                    Expanded(
+                      child: form.fields.isEmpty
+                          ? _EmptyCanvas(
+                              onAddField: () => _openFieldSelector(context),
+                            )
+                          : _BuilderCanvas(
+                              form: form,
+                              onAddField: () => _openFieldSelector(context),
+                            ),
+                    ),
+
+                    // Right panel: field settings
+                    if (!isNarrow && hasSettingsPanel)
+                      FieldSettingsPanel(
+                        field: forms.selectedField!,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // Mobile settings panel overlay
+          if (isNarrow && hasSettingsPanel)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(16)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 16,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Drag handle
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
-                  ),
-                  Flexible(
-                    child: FieldSettingsPanel(field: forms.selectedField!),
-                  ),
-                ],
+                    Flexible(
+                      child: FieldSettingsPanel(field: forms.selectedField!),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-      ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Field Library Sidebar (desktop left panel)
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _FieldLibrarySidebar extends StatelessWidget {
-  final ValueChanged<FieldType> onAdd;
-  const _FieldLibrarySidebar({required this.onAdd});
-
-  static const _categories = [
-    ('Text', [FieldType.shortText, FieldType.longText, FieldType.email]),
-    ('Numbers & Data', [FieldType.number, FieldType.date]),
-    ('Choice', [FieldType.multipleChoice, FieldType.checkbox]),
-    ('Media', [FieldType.rating, FieldType.fileUpload]),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 200,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border(right: BorderSide(color: AppColors.border)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-            child: Text(
-              'FIELDS',
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.2,
-                color: AppColors.textMuted,
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 16),
-              children: _categories.map((cat) {
-                return _SidebarCategory(
-                  label: cat.$1,
-                  types: cat.$2,
-                  onAdd: onAdd,
-                );
-              }).toList(),
-            ),
-          ),
         ],
       ),
     );
   }
 }
 
-class _SidebarCategory extends StatelessWidget {
-  final String label;
-  final List<FieldType> types;
-  final ValueChanged<FieldType> onAdd;
 
-  const _SidebarCategory(
-      {required this.label, required this.types, required this.onAdd});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(6, 12, 6, 6),
-          child: Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-              color: AppColors.textLight,
-            ),
-          ),
-        ),
-        ...types.map((t) => _SidebarFieldChip(type: t, onAdd: onAdd)),
-      ],
-    );
-  }
-}
-
-class _SidebarFieldChip extends StatefulWidget {
-  final FieldType type;
-  final ValueChanged<FieldType> onAdd;
-  const _SidebarFieldChip({required this.type, required this.onAdd});
-
-  @override
-  State<_SidebarFieldChip> createState() => _SidebarFieldChipState();
-}
-
-class _SidebarFieldChipState extends State<_SidebarFieldChip> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: () => widget.onAdd(widget.type),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 130),
-          margin: const EdgeInsets.symmetric(vertical: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: _hovered ? AppColors.primaryLight : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: _hovered ? AppColors.primary.withValues(alpha: 0.3) : Colors.transparent,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                _fieldIcon(widget.type),
-                size: 15,
-                color: _hovered ? AppColors.primary : AppColors.textLight,
-              ),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Text(
-                  widget.type.label,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: _hovered ? FontWeight.w600 : FontWeight.w400,
-                    color: _hovered ? AppColors.primary : AppColors.textMed,
-                  ),
-                ),
-              ),
-              if (_hovered)
-                Icon(Icons.add_rounded, size: 14, color: AppColors.primary),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  IconData _fieldIcon(FieldType type) {
-    switch (type) {
-      case FieldType.shortText:
-        return Icons.short_text_rounded;
-      case FieldType.longText:
-        return Icons.subject_rounded;
-      case FieldType.email:
-        return Icons.alternate_email_rounded;
-      case FieldType.number:
-        return Icons.pin_rounded;
-      case FieldType.multipleChoice:
-        return Icons.radio_button_checked_rounded;
-      case FieldType.checkbox:
-        return Icons.check_box_rounded;
-      case FieldType.rating:
-        return Icons.star_half_rounded;
-      case FieldType.date:
-        return Icons.calendar_today_rounded;
-      case FieldType.fileUpload:
-        return Icons.upload_file_rounded;
-    }
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Builder Canvas (center area)
@@ -1298,93 +827,59 @@ class _FieldTypeCard extends StatefulWidget {
 }
 
 class _FieldTypeCardState extends State<_FieldTypeCard> {
-  bool _hovered = false;
-  bool _pressed = false;
-
   @override
   Widget build(BuildContext context) {
-    final w = (MediaQuery.of(context).size.width - 52) / 3;
-    final cardWidth = w.clamp(90.0, 160.0);
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapUp: (_) => setState(() => _pressed = false),
-        onTapCancel: () => setState(() => _pressed = false),
-        onTap: widget.onTap,
-        child: Transform.scale(
-          scale: _pressed ? 0.96 : 1.0,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            width: cardWidth,
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-          decoration: BoxDecoration(
-            color: _hovered ? AppColors.primaryLight : AppColors.background,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _hovered
-                  ? AppColors.primary.withValues(alpha: 0.5)
-                  : AppColors.border,
-              width: _hovered ? 1.5 : 1,
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(_icon(widget.type), size: 24, color: AppColors.primary),
+            const SizedBox(height: 6),
+            Text(
+              widget.type.label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textMed,
+              ),
+              maxLines: 2,
             ),
-            boxShadow: _hovered
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: _hovered
-                      ? AppColors.primary.withValues(alpha: 0.12)
-                      : AppColors.surface,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  widget.icon,
-                  size: 18,
-                  color: _hovered ? AppColors.primary : AppColors.textLight,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                widget.label,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: _hovered ? AppColors.primary : AppColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                widget.description,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
-                  fontSize: 9,
-                  color: AppColors.textMuted,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ), // Column
-        ), // AnimatedContainer
-        ), // Transform.scale
-      ), // GestureDetector
-    ); // MouseRegion
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _icon(FieldType type) {
+    switch (type) {
+      case FieldType.shortText:
+        return Icons.notes_rounded;
+      case FieldType.longText:
+        return Icons.subject_rounded;
+      case FieldType.email:
+        return Icons.alternate_email_rounded;
+      case FieldType.number:
+        return Icons.pin_rounded;
+      case FieldType.multipleChoice:
+        return Icons.radio_button_checked_rounded;
+      case FieldType.checkbox:
+        return Icons.check_box_rounded;
+      case FieldType.rating:
+        return Icons.star_half_rounded;
+      case FieldType.date:
+        return Icons.calendar_today_rounded;
+      case FieldType.fileUpload:
+        return Icons.upload_file_rounded;
+    }
   }
 }
+
+

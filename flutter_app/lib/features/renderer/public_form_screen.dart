@@ -177,17 +177,17 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
             const SizedBox(height: 24),
 
             // Branding
-            Center(
+            const Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  Text(
                     'Powered by ',
                     style: TextStyle(fontSize: 12, color: AppColors.textMuted),
                   ),
                   Text(
                     appName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: AppColors.primary,
@@ -221,7 +221,7 @@ class _SuccessScreen extends StatelessWidget {
               Container(
                 width: 80,
                 height: 80,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.liveBackground,
                   shape: BoxShape.circle,
                 ),
@@ -270,8 +270,8 @@ class _ArchitectLogo extends StatelessWidget {
       children: [
         _GridIcon(),
         const SizedBox(width: 8),
-        Text(appName,
-            style: const TextStyle(
+        const Text(appName,
+            style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textDark)),

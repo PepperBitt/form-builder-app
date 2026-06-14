@@ -105,7 +105,7 @@ class _ExportScreenState extends State<ExportScreen> {
           const SizedBox(height: 24),
 
           // Format Selection
-          _SectionHeader('Format Selection'),
+          const _SectionHeader('Format Selection'),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -143,14 +143,14 @@ class _ExportScreenState extends State<ExportScreen> {
           const SizedBox(height: 24),
 
           // Date Range
-          _SectionHeader('Date Range Filter'),
+          const _SectionHeader('Date Range Filter'),
           const SizedBox(height: 10),
           _Card(
             child: Column(
               children: [
-                _DateInput(label: 'START DATE'),
+                const _DateInput(label: 'START DATE'),
                 const SizedBox(height: 12),
-                _DateInput(label: 'END DATE'),
+                const _DateInput(label: 'END DATE'),
                 const SizedBox(height: 14),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -194,7 +194,7 @@ class _ExportScreenState extends State<ExportScreen> {
           // Fields selection
           Row(
             children: [
-              _SectionHeader('Fields Selection'),
+              const _SectionHeader('Fields Selection'),
               const Spacer(),
               GestureDetector(
                 onTap: () {
@@ -320,21 +320,21 @@ class _ExportScreenState extends State<ExportScreen> {
           const SizedBox(height: 24),
 
           // Export History
-          _SectionHeader('Export History'),
+          const _SectionHeader('Export History'),
           const SizedBox(height: 10),
-          _Card(
+          const _Card(
             child: Column(
               children: [
                 _ExportHistoryItem(
                   filename: 'responses_Q3_full.xlsx',
                   date: 'Yesterday, 4:21 PM • 3.2 MB',
                 ),
-                const Divider(height: 1),
+                Divider(height: 1),
                 _ExportHistoryItem(
                   filename: 'customer_summary_final.p...',
                   date: 'Oct 12, 2023 • 14 MB',
                 ),
-                const Divider(height: 1),
+                Divider(height: 1),
                 _ExportHistoryItem(
                   filename: 'raw_data_dump.csv',
                   date: 'Oct 10, 2023 • 2.1 MB',
