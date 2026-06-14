@@ -151,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 ],
 
                                 // Email
-                                _FieldLabel('EMAIL ADDRESS'),
+                                const _FieldLabel('EMAIL ADDRESS'),
                                 const SizedBox(height: 6),
                                 TextFormField(
                                   controller: _emailCtrl,
@@ -181,7 +181,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    _FieldLabel('PASSWORD'),
+                                    const _FieldLabel('PASSWORD'),
                                     TextButton(
                                       onPressed: () {},
                                       style: TextButton.styleFrom(
@@ -340,7 +340,7 @@ class _LoginScreenState extends State<LoginScreen>
                             style: const TextStyle(
                                 fontSize: 13, color: AppColors.textLight),
                             children: [
-                              TextSpan(text: "New to $appName? "),
+                              const TextSpan(text: "New to $appName? "),
                               WidgetSpan(
                                 child: GestureDetector(
                                   onTap: () => context.go('/signup'),
@@ -362,12 +362,17 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
-    );
-  }
+    ),
+  ),
+),
+],
+),
+);
+}
 }
 
 // ── Error Banner ──────────────────────────────────────────────────────────────
@@ -447,59 +452,21 @@ class _GoogleIcon extends StatelessWidget {
 
 class _LightDotGridPainter extends CustomPainter {
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _GridIcon(),
-        const SizedBox(width: 10),
-        Text(
-          appName,
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textDark,
-          ),
-        ),
-      ],
-    );
-  }
-}
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.border.withValues(alpha: 0.5)
+      ..style = PaintingStyle.fill;
 
-class _GridIcon extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 26,
-      height: 26,
-      child: Column(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(child: _Square()),
-                const SizedBox(width: 2),
-                Expanded(child: _Square()),
-              ],
-            ),
-          ),
-          const SizedBox(height: 2),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(child: _Square()),
-                const SizedBox(width: 2),
-                Expanded(child: _Square()),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+    const double spacing = 20.0;
+    const double radius = 1.0;
 
-class _Square extends StatelessWidget {
+    for (double x = 0; x < size.width; x += spacing) {
+      for (double y = 0; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), radius, paint);
+      }
+    }
+  }
+
   @override
-  bool shouldRepaint(_LightDotGridPainter _) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

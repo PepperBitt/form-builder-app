@@ -147,13 +147,13 @@ class _SignupScreenState extends State<SignupScreen>
                             ],
 
                             // Name
-                            _FieldLabel('FULL NAME'),
+                            const _FieldLabel('FULL NAME'),
                             const SizedBox(height: 6),
                             TextFormField(
                               controller: _nameCtrl,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 hintText: 'Your full name',
-                                prefixIcon: const Icon(
+                                prefixIcon: Icon(
                                   Icons.person_outline_rounded,
                                   size: 18,
                                   color: AppColors.textMuted,
@@ -166,7 +166,7 @@ class _SignupScreenState extends State<SignupScreen>
                             const SizedBox(height: 18),
 
                             // Email
-                            _FieldLabel('WORK EMAIL'),
+                            const _FieldLabel('WORK EMAIL'),
                             const SizedBox(height: 6),
                             TextFormField(
                               controller: _emailCtrl,
@@ -192,7 +192,7 @@ class _SignupScreenState extends State<SignupScreen>
                             const SizedBox(height: 18),
 
                             // Password
-                            _FieldLabel('PASSWORD'),
+                            const _FieldLabel('PASSWORD'),
                             const SizedBox(height: 6),
                             TextFormField(
                               controller: _passCtrl,
@@ -370,59 +370,22 @@ class _FieldLabel extends StatelessWidget {
 
 class _LightDotGridPainter extends CustomPainter {
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _GridIcon(),
-        const SizedBox(width: 10),
-        Text(
-          appName,
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textDark,
-          ),
-        ),
-      ],
-    );
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.border.withValues(alpha: 0.5)
+      ..style = PaintingStyle.fill;
+
+    const double spacing = 20.0;
+    const double radius = 1.0;
+
+    for (double x = 0; x < size.width; x += spacing) {
+      for (double y = 0; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), radius, paint);
+      }
+    }
   }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _GridIcon extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 26,
-      height: 26,
-      child: Column(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(child: _Square()),
-                const SizedBox(width: 2),
-                Expanded(child: _Square()),
-              ],
-            ),
-          ),
-          const SizedBox(height: 2),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(child: _Square()),
-                const SizedBox(width: 2),
-                Expanded(child: _Square()),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Square extends StatelessWidget {
-  @override
-  bool shouldRepaint(_LightDotGridPainter _) => false;
-}

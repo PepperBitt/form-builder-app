@@ -89,7 +89,7 @@ class _FormBuilderScreenState extends State<FormBuilderScreen> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
-        title: _ArchitectLogo(),
+        title: const AppLogo(size: 22),
         actions: [
           // Preview button
           IconButton(
@@ -163,7 +163,7 @@ class _FormBuilderScreenState extends State<FormBuilderScreen> {
                     fontWeight: FontWeight.w700,
                     color: AppColors.textDark,
                   ),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText: 'Form title...',
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
@@ -183,148 +183,71 @@ class _FormBuilderScreenState extends State<FormBuilderScreen> {
                     Expanded(
                       child: form.fields.isEmpty
                           ? _EmptyCanvas(
-                              onAddField: () => setState(() => _showFieldSelector = true),
+                              onAddField: () => _openFieldSelector(context),
                             )
-                          : _FieldsCanvas(
+                          : _BuilderCanvas(
                               form: form,
-                              onAddField: () =>
-                                  setState(() => _showFieldSelector = true),
+                              onAddField: () => _openFieldSelector(context),
                             ),
                     ),
 
                     // Right panel: field settings
-                    if (forms.selectedField != null)
+                    if (!isNarrow && hasSettingsPanel)
                       FieldSettingsPanel(
                         field: forms.selectedField!,
                       ),
                   ],
                 ),
               ),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 16,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Drag handle
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Container(
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.border,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  Flexible(
-                    child: FieldSettingsPanel(field: forms.selectedField!),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
-      ],
-    );
-  }
-}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Field Library Sidebar (desktop left panel)
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _FieldLibrarySidebar extends StatelessWidget {
-  final ValueChanged<FieldType> onAdd;
-  const _FieldLibrarySidebar({required this.onAdd});
-
-  static const _categories = [
-    ('Text', [FieldType.shortText, FieldType.longText, FieldType.email]),
-    ('Numbers & Data', [FieldType.number, FieldType.date]),
-    ('Choice', [FieldType.multipleChoice, FieldType.checkbox]),
-    ('Media', [FieldType.rating, FieldType.fileUpload]),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: GestureDetector(
-        onTap: onAddField,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            MouseRegion(
-              cursor: SystemMouseCursors.click,
+          // Mobile settings panel overlay
+          if (isNarrow && hasSettingsPanel)
+            Align(
+              alignment: Alignment.bottomCenter,
               child: Container(
-                width: 160,
-                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.border, width: 1.5),
-                  borderRadius: BorderRadius.circular(12),
-                  color: AppColors.background,
+                  color: AppColors.surface,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(16)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 16,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
                 ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.add_box_outlined,
-                        size: 32, color: AppColors.textMuted),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Drop a field\nhere',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textDark,
+                    // Drag handle
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'or click to choose\nfrom the menu',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, color: AppColors.textLight),
+                    Flexible(
+                      child: FieldSettingsPanel(field: forms.selectedField!),
                     ),
                   ],
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
-
-  IconData _fieldIcon(FieldType type) {
-    switch (type) {
-      case FieldType.shortText:
-        return Icons.short_text_rounded;
-      case FieldType.longText:
-        return Icons.subject_rounded;
-      case FieldType.email:
-        return Icons.alternate_email_rounded;
-      case FieldType.number:
-        return Icons.pin_rounded;
-      case FieldType.multipleChoice:
-        return Icons.radio_button_checked_rounded;
-      case FieldType.checkbox:
-        return Icons.check_box_rounded;
-      case FieldType.rating:
-        return Icons.star_half_rounded;
-      case FieldType.date:
-        return Icons.calendar_today_rounded;
-      case FieldType.fileUpload:
-        return Icons.upload_file_rounded;
-    }
-  }
 }
+
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Builder Canvas (center area)
@@ -904,13 +827,10 @@ class _FieldTypeCard extends StatefulWidget {
 }
 
 class _FieldTypeCardState extends State<_FieldTypeCard> {
-  bool _hovered = false;
-  bool _pressed = false;
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.background,
@@ -920,10 +840,10 @@ class _FieldTypeCardState extends State<_FieldTypeCard> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(_icon(type), size: 24, color: AppColors.primary),
+            Icon(_icon(widget.type), size: 24, color: AppColors.primary),
             const SizedBox(height: 6),
             Text(
-              type.label,
+              widget.type.label,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 11,
@@ -962,65 +882,4 @@ class _FieldTypeCardState extends State<_FieldTypeCard> {
   }
 }
 
-// ── Architect Logo ─────────────────────────────────────────────────────────
-class _ArchitectLogo extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _GridIcon(),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(appName,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
-        ),
-      ],
-    );
-  }
-}
 
-class _GridIcon extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 22,
-      height: 22,
-      child: Column(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(child: _Square()),
-                const SizedBox(width: 2),
-                Expanded(child: _Square()),
-              ],
-            ),
-          ),
-          const SizedBox(height: 2),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(child: _Square()),
-                const SizedBox(width: 2),
-                Expanded(child: _Square()),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Square extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      );
-}

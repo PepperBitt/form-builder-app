@@ -30,14 +30,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final forms = context.watch<FormProvider>();
     final auth = context.watch<AuthProvider>();
     final userName = auth.currentUser?.name ?? '';
-    final firstName = userName.split(' ').first;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
-        title: ArchitectLogo(),
+        title: const AppLogo(size: 22),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
@@ -64,14 +63,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header
-                    Row(
+                    const Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Form Overview',
                                 style: TextStyle(
                                   fontSize: 22,
@@ -83,7 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               SizedBox(height: 4),
                               Text(
                                 'Manage your active forms, analyze response data, and create new architectural data structures.',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   color: AppColors.textLight,
                                   height: 1.5,
@@ -97,20 +96,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 20),
 
                     // Create New Form button
-                    _CreateFormButton(
+                    ElevatedButton.icon(
                       onPressed: () {
                         forms.createNewForm();
                         if (forms.activeForm != null) {
                           context.push('/builder/${forms.activeForm!.id}');
                         }
                       },
+                      icon: const Icon(Icons.add_rounded, size: 20),
+                      label: const Text('Create New Form'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 20),
 
                     // Stats row
                     Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: _StatCard(
                             icon: Icons.inbox_rounded,
                             label: 'Total Responses',
@@ -241,18 +248,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _ActivityItem(
+                    const _ActivityItem(
                       message: 'New response received for ',
                       formName: '"Customer Experience 2024"',
                       time: '2 minutes ago • United States',
                     ),
-                    _ActivityItem(
+                    const _ActivityItem(
                       message: 'Form ',
                       formName: '"Event Registration"',
                       time: '1 hour ago • Revision #12',
                       suffix: ' was updated by Sarah L.',
                     ),
-                    _ActivityItem(
+                    const _ActivityItem(
                       message: 'Analytics report exported for ',
                       formName: '"Product Feedback"',
                       time: '4 hours ago • PDF Format',
@@ -310,8 +317,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
               ),
+            ),
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -324,15 +332,11 @@ class _StatCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  final String? trend;
-  final bool? trendPositive;
 
   const _StatCard({
     required this.icon,
     required this.label,
     required this.value,
-    this.trend,
-    this.trendPositive,
   });
 
   @override
@@ -379,34 +383,6 @@ class _StatCard extends StatelessWidget {
               color: AppColors.textLight,
             ),
           ),
-          if (trend != null) const SizedBox(height: 8),
-          if (trend != null && trendPositive != null)
-            Row(
-              children: [
-                Icon(
-                  trendPositive! ? Icons.trending_up_rounded : Icons.trending_down_rounded,
-                  size: 13,
-                  color: trendPositive! ? AppColors.live : AppColors.danger,
-                ),
-                const SizedBox(width: 3),
-                Text(
-                  trend!,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: trendPositive! ? AppColors.live : AppColors.danger,
-                  ),
-                ),
-              ],
-            )
-          else if (trend != null)
-            Text(
-              trend!,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                color: AppColors.textLight,
-              ),
-            ),
         ],
       ),
     );
@@ -717,44 +693,19 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-// ── Activity Card + Item ──────────────────────────────────────────────────────
-
-class _ActivityCard extends StatelessWidget {
-  final List<Widget> children;
-  const _ActivityCard({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(children: children),
-    );
-  }
-}
+// ── Activity Item ───────────────────────────────────────────────────────────────
 
 class _ActivityItem extends StatelessWidget {
   final String message;
   final String formName;
   final String time;
   final String? suffix;
-  final IconData iconData;
-  final Color iconColor;
-  final Color iconBg;
-  final bool isLast;
 
   const _ActivityItem({
     required this.message,
     required this.formName,
     required this.time,
     this.suffix,
-    required this.iconData,
-    required this.iconColor,
-    required this.iconBg,
-    this.isLast = false,
   });
 
   @override
@@ -812,26 +763,7 @@ class _ActivityItem extends StatelessWidget {
   }
 }
 
-// ── Architect Logo (reusable) ─────────────────────────────────────────────
-class ArchitectLogo extends StatelessWidget {
-  const ArchitectLogo({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _GridIcon(),
-        const SizedBox(width: 8),
-        Text(
-          appName,
-          style: const TextStyle(
-              fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textDark),
-        ),
-      ],
-    );
-  }
-}
 
 // ── Empty State ───────────────────────────────────────────────────────────────
 

@@ -191,7 +191,7 @@ class DashboardShell extends StatelessWidget {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           border: Border(
             top: BorderSide(color: AppColors.border, width: 1),
@@ -261,8 +261,8 @@ class SettingsScreen extends StatelessWidget {
         ),
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
           child: Divider(height: 1, color: AppColors.border),
         ),
       ),
