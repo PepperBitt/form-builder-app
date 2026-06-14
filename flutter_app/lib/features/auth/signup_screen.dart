@@ -212,8 +212,8 @@ class _SignupScreenState extends State<SignupScreen>
                                     size: 18,
                                     color: AppColors.textMuted,
                                   ),
-                                  onPressed: () => setState(
-                                      () => _obscurePassword = !_obscurePassword),
+                                  onPressed: () => setState(() =>
+                                      _obscurePassword = !_obscurePassword),
                                 ),
                               ),
                               validator: (v) {
@@ -388,4 +388,3 @@ class _LightDotGridPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-

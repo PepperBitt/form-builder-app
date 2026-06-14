@@ -44,7 +44,8 @@ class ResponseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final id = await _responseService.submitResponse(formId, data, formFields);
+      final id =
+          await _responseService.submitResponse(formId, data, formFields);
       final response = ResponseModel(
         id: id,
         formId: formId,

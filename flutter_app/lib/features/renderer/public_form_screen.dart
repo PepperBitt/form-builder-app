@@ -35,7 +35,9 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
     final forms = context.read<FormProvider>();
     final active = forms.activeForm;
 
-    if (active != null && active.id == widget.formId && active.fields.isNotEmpty) {
+    if (active != null &&
+        active.id == widget.formId &&
+        active.fields.isNotEmpty) {
       setState(() => _form = active);
       return;
     }
@@ -85,7 +87,9 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: _form!.isLive ? AppColors.liveBackground : AppColors.draftBackground,
+              color: _form!.isLive
+                  ? AppColors.liveBackground
+                  : AppColors.draftBackground,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -110,8 +114,9 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 1.5),
+                border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    width: 1.5),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

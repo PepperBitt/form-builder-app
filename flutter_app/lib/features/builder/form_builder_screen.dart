@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../providers/form_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/models.dart';
+import '../../core/constants/api_constants.dart';
 import 'widgets/field_settings_panel.dart';
 import '../../widgets/app_logo.dart';
 
@@ -28,7 +31,9 @@ class _FormBuilderScreenState extends State<FormBuilderScreen> {
       final forms = context.read<FormProvider>();
       final active = forms.activeForm;
       final shouldLoadSavedForm = !widget.formId.startsWith('draft_') &&
-          (active == null || active.id != widget.formId || active.fields.isEmpty);
+          (active == null ||
+              active.id != widget.formId ||
+              active.fields.isEmpty);
 
       if (shouldLoadSavedForm) {
         forms.loadFormById(widget.formId).then((_) {
@@ -93,9 +98,17 @@ class _FormBuilderScreenState extends State<FormBuilderScreen> {
         actions: [
           // Preview button
           IconButton(
-            icon: const Icon(Icons.visibility_outlined, size: 20, color: AppColors.textMed),
+            icon: const Icon(Icons.visibility_outlined,
+                size: 20, color: AppColors.textMed),
             onPressed: () => context.push('/form/${form.id}'),
             tooltip: 'Preview Form',
+          ),
+          // Share button
+          IconButton(
+            icon: const Icon(Icons.share_outlined,
+                size: 20, color: AppColors.textMed),
+            tooltip: 'Copy share link',
+            onPressed: () => _copyShareLink(context, form.id),
           ),
           // Save button
           TextButton(
@@ -109,7 +122,11 @@ class _FormBuilderScreenState extends State<FormBuilderScreen> {
                         content: Text(success
                             ? 'Form saved successfully'
                             : 'Save failed: ${forms.error ?? "Unknown error"}'),
-                        backgroundColor: success ? Colors.green : Colors.red,
+                        backgroundColor:
+                            success ? AppColors.live : AppColors.danger,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                       ),
                     );
                   },
@@ -119,29 +136,69 @@ class _FormBuilderScreenState extends State<FormBuilderScreen> {
                     height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Save', style: TextStyle(color: AppColors.primary)),
+                : const Text('Save',
+                    style: TextStyle(color: AppColors.primary)),
           ),
-          // Publish toggle
+          // Publish / Unpublish toggle
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: GestureDetector(
-              onTap: () => forms.toggleFormLive(form.id),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: form.isLive ? AppColors.live : AppColors.primary,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  form.isLive ? '● LIVE' : 'Publish',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+            child: forms.isPublishing
+                ? const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppColors.primary),
+                    ),
+                  )
+                : GestureDetector(
+                    onTap: () async {
+                      final ok = await forms.toggleFormLive(form.id);
+                      if (!context.mounted) return;
+                      if (!ok) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(forms.error ?? 'Publish failed'),
+                            backgroundColor: AppColors.danger,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                        );
+                      } else {
+                        final isNowLive = forms.activeForm?.isLive ?? false;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(isNowLive
+                                ? 'Form is now live!'
+                                : 'Form reverted to draft'),
+                            backgroundColor:
+                                isNowLive ? AppColors.live : AppColors.draft,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: form.isLive ? AppColors.live : AppColors.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        form.isLive ? '● LIVE' : 'Publish',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
           ),
         ],
       ),
@@ -245,9 +302,32 @@ class _FormBuilderScreenState extends State<FormBuilderScreen> {
       ),
     );
   }
+
+  void _copyShareLink(BuildContext context, String formId) {
+    final String origin;
+    if (kIsWeb) {
+      // On Flutter Web, use the actual browser origin.
+      origin = Uri.base.origin;
+    } else {
+      origin = ApiConstants.publicFrontendBaseUrl;
+    }
+    final link = '$origin/form/$formId';
+    Clipboard.setData(ClipboardData(text: link));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(children: [
+          const Icon(Icons.link_rounded, color: Colors.white, size: 18),
+          const SizedBox(width: 8),
+          Expanded(child: Text('Link copied: $link')),
+        ]),
+        backgroundColor: AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
 }
-
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Builder Canvas (center area)
@@ -604,8 +684,7 @@ class _FieldTileState extends State<_FieldTile> {
                         icon: Icons.delete_outline_rounded,
                         color: AppColors.danger,
                         tooltip: 'Remove field',
-                        onTap: () =>
-                            formProvider.removeField(widget.field.id),
+                        onTap: () => formProvider.removeField(widget.field.id),
                       ),
                       const SizedBox(width: 4),
                       // Drag handle
@@ -712,15 +791,45 @@ class _FieldSelectorSheet extends StatelessWidget {
   const _FieldSelectorSheet({required this.onSelect});
 
   static const _fieldTypes = [
-    (FieldType.shortText, Icons.short_text_rounded, 'Short Text', 'Single line answer'),
-    (FieldType.longText, Icons.subject_rounded, 'Long Text', 'Multi-line answer'),
-    (FieldType.email, Icons.alternate_email_rounded, 'Email', 'Email address input'),
+    (
+      FieldType.shortText,
+      Icons.short_text_rounded,
+      'Short Text',
+      'Single line answer'
+    ),
+    (
+      FieldType.longText,
+      Icons.subject_rounded,
+      'Long Text',
+      'Multi-line answer'
+    ),
+    (
+      FieldType.email,
+      Icons.alternate_email_rounded,
+      'Email',
+      'Email address input'
+    ),
     (FieldType.number, Icons.pin_rounded, 'Number', 'Numeric input'),
-    (FieldType.multipleChoice, Icons.radio_button_checked_rounded, 'Multiple Choice', 'One answer from list'),
-    (FieldType.checkbox, Icons.check_box_rounded, 'Checkboxes', 'Multiple selections'),
+    (
+      FieldType.multipleChoice,
+      Icons.radio_button_checked_rounded,
+      'Multiple Choice',
+      'One answer from list'
+    ),
+    (
+      FieldType.checkbox,
+      Icons.check_box_rounded,
+      'Checkboxes',
+      'Multiple selections'
+    ),
     (FieldType.rating, Icons.star_half_rounded, 'Rating', 'Star rating scale'),
     (FieldType.date, Icons.calendar_today_rounded, 'Date', 'Date picker'),
-    (FieldType.fileUpload, Icons.upload_file_rounded, 'File Upload', 'Attach a file'),
+    (
+      FieldType.fileUpload,
+      Icons.upload_file_rounded,
+      'File Upload',
+      'Attach a file'
+    ),
   ];
 
   @override
@@ -881,5 +990,3 @@ class _FieldTypeCardState extends State<_FieldTypeCard> {
     }
   }
 }
-
-

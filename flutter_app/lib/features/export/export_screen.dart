@@ -44,9 +44,23 @@ class _ExportScreenState extends State<ExportScreen> {
     setState(() => _isExporting = true);
     try {
       final svc = ExportService();
-      final bytes = _selectedFormat == 'pdf'
-          ? await svc.downloadPdf(widget.formId)
-          : await svc.downloadExcel(widget.formId);
+      final List<int> bytes;
+      switch (_selectedFormat) {
+        case 'pdf':
+          bytes = await svc.downloadPdf(widget.formId);
+          break;
+        case 'xlsx':
+          bytes = await svc.downloadExcel(widget.formId);
+          break;
+        case 'csv':
+          bytes = await svc.downloadCsv(widget.formId);
+          break;
+        case 'json':
+          bytes = await svc.downloadJson(widget.formId);
+          break;
+        default:
+          bytes = await svc.downloadPdf(widget.formId);
+      }
 
       if (!mounted) return;
       setState(() => _isExporting = false);
@@ -62,7 +76,8 @@ class _ExportScreenState extends State<ExportScreen> {
           ),
           backgroundColor: AppColors.live,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
       // NOTE: For actual file saving on device, add `path_provider` +
@@ -74,8 +89,10 @@ class _ExportScreenState extends State<ExportScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Export failed: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.danger,
           behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     }
@@ -136,6 +153,16 @@ class _ExportScreenState extends State<ExportScreen> {
                   subtitle: 'Database\nExport',
                   isSelected: _selectedFormat == 'csv',
                   onTap: () => setState(() => _selectedFormat = 'csv'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _FormatCard(
+                  icon: Icons.code_outlined,
+                  label: 'JSON',
+                  subtitle: 'Raw\nData',
+                  isSelected: _selectedFormat == 'json',
+                  onTap: () => setState(() => _selectedFormat = 'json'),
                 ),
               ),
             ],
@@ -289,8 +316,8 @@ class _ExportScreenState extends State<ExportScreen> {
                 const SizedBox(height: 4),
                 Text(
                   'Approximately ${_form?.responseCount ?? 0} records will be included in this export.',
-                  style: const TextStyle(
-                      fontSize: 13, color: AppColors.textLight),
+                  style:
+                      const TextStyle(fontSize: 13, color: AppColors.textLight),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -306,7 +333,8 @@ class _ExportScreenState extends State<ExportScreen> {
                                 strokeWidth: 2, color: Colors.white),
                           )
                         : const Icon(Icons.download_rounded, size: 18),
-                    label: Text(_isExporting ? 'Generating...' : 'Download Data'),
+                    label:
+                        Text(_isExporting ? 'Generating...' : 'Download Data'),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -319,38 +347,38 @@ class _ExportScreenState extends State<ExportScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Export History
+          // Export History — no server-side history endpoint yet
           const _SectionHeader('Export History'),
           const SizedBox(height: 10),
-          const _Card(
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
             child: Column(
               children: [
-                _ExportHistoryItem(
-                  filename: 'responses_Q3_full.xlsx',
-                  date: 'Yesterday, 4:21 PM • 3.2 MB',
+                const Icon(Icons.history_rounded,
+                    size: 36, color: AppColors.textMuted),
+                const SizedBox(height: 10),
+                const Text(
+                  'No export history yet',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
                 ),
-                Divider(height: 1),
-                _ExportHistoryItem(
-                  filename: 'customer_summary_final.p...',
-                  date: 'Oct 12, 2023 • 14 MB',
-                ),
-                Divider(height: 1),
-                _ExportHistoryItem(
-                  filename: 'raw_data_dump.csv',
-                  date: 'Oct 10, 2023 • 2.1 MB',
+                const SizedBox(height: 6),
+                const Text(
+                  'Exports are not stored server-side.\nDownloaded files are saved to your device.',
+                  style: TextStyle(fontSize: 12, color: AppColors.textLight),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () {},
-            child: const Text('VIEW FULL HISTORY',
-                style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                    letterSpacing: 0.5)),
           ),
           const SizedBox(height: 24),
         ],
@@ -432,14 +460,12 @@ class _FormatCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color:
-                    isSelected ? AppColors.primary : AppColors.textDark,
+                color: isSelected ? AppColors.primary : AppColors.textDark,
               ),
             ),
             Text(
               subtitle,
-              style: const TextStyle(
-                  fontSize: 10, color: AppColors.textMuted),
+              style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
               textAlign: TextAlign.center,
             ),
           ],
@@ -578,8 +604,8 @@ class _FieldCheckRow extends StatelessWidget {
                 ),
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                      fontSize: 11, color: AppColors.textLight),
+                  style:
+                      const TextStyle(fontSize: 11, color: AppColors.textLight),
                 ),
               ],
             ),
@@ -590,54 +616,4 @@ class _FieldCheckRow extends StatelessWidget {
   }
 }
 
-class _ExportHistoryItem extends StatelessWidget {
-  final String filename;
-  final String date;
 
-  const _ExportHistoryItem({required this.filename, required this.date});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.insert_drive_file_outlined,
-                size: 18, color: AppColors.textMed),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  filename,
-                  style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textDark),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(date,
-                    style: const TextStyle(
-                        fontSize: 11, color: AppColors.textLight)),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.download_outlined,
-                size: 18, color: AppColors.primary),
-            onPressed: () {},
-          ),
-        ],
-      ),
-    );
-  }
-}

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/form_provider.dart';
 import '../../providers/response_provider.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/models.dart';
+import '../../services/response_service.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -15,133 +16,255 @@ class AnalyticsScreen extends StatefulWidget {
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String? _selectedFormId;
+  bool _analyticsLoading = false;
+  Map<String, dynamic>? _analyticsData;
+  String? _analyticsError;
+  final _responseService = ResponseService();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final forms = context.read<FormProvider>();
-      if (forms.forms.isNotEmpty) {
-        setState(() => _selectedFormId = forms.forms.first.id);
+      if (forms.forms.isNotEmpty && _selectedFormId == null) {
+        _selectForm(forms.forms.first.id);
       }
     });
+  }
+
+  Future<void> _selectForm(String formId) async {
+    setState(() {
+      _selectedFormId = formId;
+      _analyticsLoading = true;
+      _analyticsData = null;
+      _analyticsError = null;
+    });
+    // Load responses in parallel
+    context.read<ResponseProvider>().loadResponses(formId);
+    try {
+      final data = await _responseService.getAnalytics(formId);
+      if (mounted) {
+        setState(() {
+          _analyticsData = data;
+          _analyticsLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _analyticsError = e.toString();
+          _analyticsLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final forms = context.watch<FormProvider>();
-    final responses = context.watch<ResponseProvider>();
-
-    final selectedForm = _selectedFormId != null && forms.forms.isNotEmpty
-        ? forms.forms.firstWhere((f) => f.id == _selectedFormId,
-            orElse: () => forms.forms.first)
-        : null;
-
-    final formResponses =
-        selectedForm != null ? responses.getResponses(selectedForm.id) : [];
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
-        title: const Text('Analytics'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: TextButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.download_outlined, size: 16),
-              label: const Text('Export'),
-              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-            ),
+        title: Text(
+          'Analytics',
+          style: GoogleFonts.inter(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDark,
           ),
-        ],
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: AppColors.border),
+        ),
       ),
-      body: selectedForm == null
-          ? const Center(child: Text('No forms available'))
+      body: forms.forms.isEmpty
+          ? _buildNoForms(forms.isLoading)
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
                 // Form picker
                 _FormDropdown(
-                  forms: forms.forms
-                      .map((f) => MapEntry(f.id, f.title))
-                      .toList(),
+                  forms:
+                      forms.forms.map((f) => MapEntry(f.id, f.title)).toList(),
                   selected: _selectedFormId,
-                  onChanged: (v) => setState(() => _selectedFormId = v),
+                  onChanged: (v) {
+                    if (v != null) _selectForm(v);
+                  },
                 ),
                 const SizedBox(height: 20),
 
-                // Key metrics
-                const _SectionTitle('Key Metrics'),
-                const SizedBox(height: 10),
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1.5,
-                  children: [
-                    _MetricCard(
-                      label: 'Total Responses',
-                      value: formResponses.length.toString(),
-                      icon: Icons.inbox_outlined,
-                      color: AppColors.primary,
+                if (_analyticsLoading)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 60),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: AppColors.primary,
+                      ),
                     ),
-                    const _MetricCard(
-                      label: 'Completion Rate',
-                      value: '87%',
-                      icon: Icons.check_circle_outline,
-                      color: AppColors.live,
-                    ),
-                    const _MetricCard(
-                      label: 'Avg. Time',
-                      value: '2m 34s',
-                      icon: Icons.timer_outlined,
-                      color: Color(0xFF7C3AED),
-                    ),
-                    const _MetricCard(
-                      label: 'Drop-off Rate',
-                      value: '13%',
-                      icon: Icons.trending_down_rounded,
-                      color: AppColors.draft,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Response trend
-                const _SectionTitle('Response Trend'),
-                const SizedBox(height: 10),
-                const _ChartCard(
-                  child: _BarChart(
-                    data: [12, 19, 8, 25, 14, 32, 18, 22, 16, 28, 20, 35],
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Field breakdown
-                const _SectionTitle('Field Breakdown'),
-                const SizedBox(height: 10),
-                ...selectedForm.fields
-                    .take(3)
-                    .map((f) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: _FieldAnalyticsCard(
-                            label: f.label.isEmpty ? f.type.label : f.label,
-                            responseRate: 72 + (f.label.length % 25),
-                            fieldType: f.type.label,
-                          ),
-                        )),
+                  )
+                else if (_analyticsError != null)
+                  _buildError(_analyticsError!)
+                else if (_analyticsData != null)
+                  ..._buildAnalyticsContent(_analyticsData!),
               ],
             ),
     );
   }
+
+  List<Widget> _buildAnalyticsContent(Map<String, dynamic> data) {
+    final totalResponses = (data['total_responses'] ?? 0) as int;
+    final analytics = (data['analytics'] ?? {}) as Map<String, dynamic>;
+
+    return [
+      // ── Total Responses metric ──────────────────────────────────────────
+      _SectionTitle('Key Metrics'),
+      const SizedBox(height: 10),
+      _MetricCard(
+        label: 'Total Responses',
+        value: totalResponses.toString(),
+        icon: Icons.inbox_outlined,
+        color: AppColors.primary,
+      ),
+      const SizedBox(height: 24),
+
+      // ── Field Breakdown ─────────────────────────────────────────────────
+      _SectionTitle('Field Breakdown'),
+      const SizedBox(height: 10),
+
+      if (analytics.isEmpty)
+        _buildEmptyAnalytics()
+      else ...[
+        ...analytics.entries.map((entry) {
+          final label = entry.key;
+          final counts = entry.value as Map<String, dynamic>;
+          final total = counts.values.fold<int>(0, (s, v) => s + (v as int));
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _FieldBreakdownCard(
+              label: label,
+              counts: counts,
+              totalResponses: total,
+            ),
+          );
+        }),
+      ],
+    ];
+  }
+
+  Widget _buildNoForms(bool isLoading) {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+            strokeWidth: 2.5, color: AppColors.primary),
+      );
+    }
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(Icons.bar_chart_rounded,
+                  color: AppColors.primary, size: 34),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'No forms yet',
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Create a form on the Forms tab to start\ncollecting and analyzing responses.',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: AppColors.textLight,
+                height: 1.6,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyAnalytics() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.inbox_outlined,
+              size: 40, color: AppColors.textMuted),
+          const SizedBox(height: 12),
+          Text(
+            'No responses yet',
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDark,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Share your form to start collecting responses.\nAnalytics will appear here automatically.',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: AppColors.textLight,
+              height: 1.6,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildError(String error) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.dangerLight,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, color: AppColors.danger, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Failed to load analytics: $error',
+              style: GoogleFonts.inter(fontSize: 13, color: AppColors.danger),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
+// ── Section Title ──────────────────────────────────────────────────────────────
 
 class _SectionTitle extends StatelessWidget {
   final String text;
@@ -150,13 +273,15 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
         text,
-        style: const TextStyle(
+        style: GoogleFonts.inter(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: AppColors.textDark,
         ),
       );
 }
+
+// ── Form Dropdown ──────────────────────────────────────────────────────────────
 
 class _FormDropdown extends StatelessWidget {
   final List<MapEntry<String, String>> forms;
@@ -182,13 +307,16 @@ class _FormDropdown extends StatelessWidget {
         child: DropdownButton<String>(
           value: selected,
           isExpanded: true,
-          hint: const Text('Select a form'),
+          hint: Text(
+            'Select a form',
+            style: GoogleFonts.inter(fontSize: 14, color: AppColors.textMuted),
+          ),
           onChanged: onChanged,
           items: forms
               .map((e) => DropdownMenuItem(
                     value: e.key,
-                    child: Text(e.value,
-                        style: const TextStyle(fontSize: 14)),
+                    child:
+                        Text(e.value, style: GoogleFonts.inter(fontSize: 14)),
                   ))
               .toList(),
         ),
@@ -196,6 +324,8 @@ class _FormDropdown extends StatelessWidget {
     );
   }
 }
+
+// ── Metric Card ────────────────────────────────────────────────────────────────
 
 class _MetricCard extends StatelessWidget {
   final String label;
@@ -213,36 +343,43 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
-            decoration:
-                BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-            child: Icon(icon, size: 16, color: color),
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 20, color: color),
           ),
+          const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 value,
-                style: const TextStyle(
-                  fontSize: 24,
+                style: GoogleFonts.inter(
+                  fontSize: 28,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textDark,
+                  letterSpacing: -0.5,
                 ),
               ),
-              Text(label,
-                  style: const TextStyle(fontSize: 11, color: AppColors.textLight)),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: AppColors.textLight,
+                ),
+              ),
             ],
           ),
         ],
@@ -251,106 +388,26 @@ class _MetricCard extends StatelessWidget {
   }
 }
 
-class _ChartCard extends StatelessWidget {
-  final Widget child;
-  const _ChartCard({required this.child});
+// ── Field Breakdown Card ────────────────────────────────────────────────────────
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      height: 180,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: child,
-    );
-  }
-}
-
-class _BarChart extends StatelessWidget {
-  final List<int> data;
-  final List<String> labels;
-
-  const _BarChart({required this.data, required this.labels});
-
-  @override
-  Widget build(BuildContext context) {
-    final max = data.reduce((a, b) => a > b ? a : b);
-    return Column(
-      children: [
-        Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: List.generate(
-              data.length,
-              (i) => Flexible(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Flexible(
-                      child: FractionallySizedBox(
-                        heightFactor: data[i] / max,
-                        child: AnimatedContainer(
-                          duration: Duration(milliseconds: 300 + i * 50),
-                          width: 18,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.primary.withValues(alpha: 0.6),
-                                AppColors.primary,
-                              ],
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                            ),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: labels
-              .map((l) => Flexible(
-                    child: Text(
-                      l,
-                      style: const TextStyle(
-                          fontSize: 9, color: AppColors.textMuted),
-                      textAlign: TextAlign.center,
-                    ),
-                  ))
-              .toList(),
-        ),
-      ],
-    );
-  }
-}
-
-class _FieldAnalyticsCard extends StatelessWidget {
+class _FieldBreakdownCard extends StatelessWidget {
   final String label;
-  final int responseRate;
-  final String fieldType;
+  final Map<String, dynamic> counts;
+  final int totalResponses;
 
-  const _FieldAnalyticsCard({
+  const _FieldBreakdownCard({
     required this.label,
-    required this.responseRate,
-    required this.fieldType,
+    required this.counts,
+    required this.totalResponses,
   });
 
   @override
   Widget build(BuildContext context) {
+    final sorted = counts.entries.toList()
+      ..sort((a, b) => (b.value as int).compareTo(a.value as int));
+
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
@@ -359,58 +416,72 @@ class _FieldAnalyticsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textDark,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  fieldType,
-                  style: const TextStyle(fontSize: 10, color: AppColors.textLight),
-                ),
-              ),
-            ],
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDark,
+            ),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: responseRate / 100,
-                    backgroundColor: AppColors.background,
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(AppColors.primary),
-                    minHeight: 6,
+          const SizedBox(height: 12),
+          ...sorted.take(6).map((entry) {
+            final count = entry.value as int;
+            final pct = totalResponses > 0 ? count / totalResponses : 0.0;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          entry.key,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: AppColors.textMed,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$count',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: pct,
+                      backgroundColor: AppColors.background,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppColors.primary),
+                      minHeight: 6,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+          if (sorted.length > 6)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                '+${sorted.length - 6} more answers',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: AppColors.textMuted,
                 ),
               ),
-              const SizedBox(width: 10),
-              Text(
-                '$responseRate%',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
+            ),
         ],
       ),
     );

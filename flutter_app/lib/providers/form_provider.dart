@@ -9,12 +9,14 @@ class FormProvider extends ChangeNotifier {
   FormModel? _activeForm;
   FieldModel? _selectedField;
   bool _isLoading = false;
+  bool _isPublishing = false;
   String? _error;
 
   List<FormModel> get forms => _forms;
   FormModel? get activeForm => _activeForm;
   FieldModel? get selectedField => _selectedField;
   bool get isLoading => _isLoading;
+  bool get isPublishing => _isPublishing;
   String? get error => _error;
 
   int get totalResponses => _forms.fold(0, (sum, f) => sum + f.responseCount);
@@ -207,7 +209,8 @@ class FormProvider extends ChangeNotifier {
   }
 
   /// Persists the active form to the backend.
-  /// (Backend currently only supports create; update would be a future phase.)
+  /// - For new forms (id starts with 'draft_') → POST /api/forms/create.
+  /// - For existing forms → PUT /api/forms/{id}.
   Future<bool> saveForm() async {
     if (_activeForm == null) return false;
     _isLoading = true;
@@ -215,17 +218,24 @@ class FormProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final newId = await _formService.createForm(_activeForm!);
-      _activeForm = FormModel(
-        id: newId,
-        title: _activeForm!.title,
-        description: _activeForm!.description,
-        fields: _activeForm!.fields,
-        isLive: _activeForm!.isLive,
-        responseCount: _activeForm!.responseCount,
-        workspaceName: _activeForm!.workspaceName,
-        createdAt: _activeForm!.createdAt,
-      );
+      if (_activeForm!.id.startsWith('draft_')) {
+        // New form — create on backend.
+        final newId = await _formService.createForm(_activeForm!);
+        _activeForm = FormModel(
+          id: newId,
+          title: _activeForm!.title,
+          description: _activeForm!.description,
+          fields: _activeForm!.fields,
+          isLive: _activeForm!.isLive,
+          responseCount: _activeForm!.responseCount,
+          workspaceName: _activeForm!.workspaceName,
+          createdAt: _activeForm!.createdAt,
+        );
+      } else {
+        // Existing form — update on backend.
+        final updated = await _formService.updateForm(_activeForm!);
+        _activeForm = updated;
+      }
       await fetchForms();
       return true;
     } catch (e) {
@@ -236,16 +246,57 @@ class FormProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> toggleFormLive(String formId) async {
-    // Local-only flag — backend does not yet track live/draft state.
-    final form = _forms.firstWhere((f) => f.id == formId);
-    form.isLive = !form.isLive;
+  /// Publishes or unpublishes the form via real backend calls.
+  /// Returns true on success, false on failure.
+  Future<bool> toggleFormLive(String formId) async {
+    final form = _forms.firstWhere(
+      (f) => f.id == formId,
+      orElse: () => _activeForm!,
+    );
+    _isPublishing = true;
+    _error = null;
     notifyListeners();
+
+    try {
+      final updated = form.isLive
+          ? await _formService.unpublishForm(formId)
+          : await _formService.publishForm(formId);
+
+      // Update in list
+      final idx = _forms.indexWhere((f) => f.id == formId);
+      if (idx != -1) _forms[idx] = updated;
+
+      // Update active form if it's the same
+      if (_activeForm?.id == formId) _activeForm = updated;
+
+      _isPublishing = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isPublishing = false;
+      notifyListeners();
+      return false;
+    }
   }
 
-  Future<void> deleteForm(String formId) async {
-    // Backend has no delete endpoint yet; remove locally.
-    _forms.removeWhere((f) => f.id == formId);
+  /// Deletes the form via the real backend DELETE endpoint.
+  Future<bool> deleteForm(String formId) async {
+    _isLoading = true;
+    _error = null;
     notifyListeners();
+    try {
+      await _formService.deleteForm(formId);
+      _forms.removeWhere((f) => f.id == formId);
+      if (_activeForm?.id == formId) _activeForm = null;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 }

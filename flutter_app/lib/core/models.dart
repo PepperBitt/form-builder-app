@@ -182,6 +182,71 @@ class UserModel {
   });
 }
 
+class UserSettingsModel {
+  final bool emailNotifications;
+  final bool pushNotifications;
+  final String theme;
+  final String language;
+
+  const UserSettingsModel({
+    this.emailNotifications = true,
+    this.pushNotifications = false,
+    this.theme = 'system',
+    this.language = 'en',
+  });
+
+  UserSettingsModel copyWith({
+    bool? emailNotifications,
+    bool? pushNotifications,
+    String? theme,
+    String? language,
+  }) {
+    return UserSettingsModel(
+      emailNotifications: emailNotifications ?? this.emailNotifications,
+      pushNotifications: pushNotifications ?? this.pushNotifications,
+      theme: theme ?? this.theme,
+      language: language ?? this.language,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'email_notifications': emailNotifications,
+        'push_notifications': pushNotifications,
+        'theme': theme,
+        'language': language,
+      };
+}
+
+class NotificationModel {
+  final String id;
+  final String title;
+  final String message;
+  final String notificationType;
+  final bool isRead;
+  final DateTime createdAt;
+
+  const NotificationModel({
+    required this.id,
+    required this.title,
+    required this.message,
+    required this.notificationType,
+    required this.isRead,
+    required this.createdAt,
+  });
+
+  factory NotificationModel.fromJson(Map<String, dynamic> json) {
+    return NotificationModel(
+      id: json['id'] as String,
+      title: (json['title'] ?? '') as String,
+      message: (json['message'] ?? '') as String,
+      notificationType: (json['notification_type'] ?? 'general') as String,
+      isRead: (json['is_read'] ?? false) as bool,
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.now(),
+    );
+  }
+}
+
 class ActivityItem {
   final String message;
   final String time;

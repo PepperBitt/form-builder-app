@@ -11,7 +11,8 @@ class ResponsesDashboardScreen extends StatefulWidget {
   const ResponsesDashboardScreen({super.key});
 
   @override
-  State<ResponsesDashboardScreen> createState() => _ResponsesDashboardScreenState();
+  State<ResponsesDashboardScreen> createState() =>
+      _ResponsesDashboardScreenState();
 }
 
 class _ResponsesDashboardScreenState extends State<ResponsesDashboardScreen> {
@@ -48,8 +49,9 @@ class _ResponsesDashboardScreenState extends State<ResponsesDashboardScreen> {
             orElse: () => forms.forms.first)
         : (forms.forms.isNotEmpty ? forms.forms.first : null);
 
-    final formResponses =
-        selectedForm != null ? responses.getResponses(selectedForm.id) : <ResponseModel>[];
+    final formResponses = selectedForm != null
+        ? responses.getResponses(selectedForm.id)
+        : <ResponseModel>[];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -120,13 +122,14 @@ class _ResponsesDashboardScreenState extends State<ResponsesDashboardScreen> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  _MiniStat(label: 'Total', value: formResponses.length.toString()),
+                  _MiniStat(
+                      label: 'Total', value: formResponses.length.toString()),
                   const SizedBox(width: 24),
                   _MiniStat(
                       label: 'This Week',
                       value: formResponses
-                          .where((r) => r.submittedAt
-                              .isAfter(DateTime.now().subtract(const Duration(days: 7))))
+                          .where((r) => r.submittedAt.isAfter(
+                              DateTime.now().subtract(const Duration(days: 7))))
                           .length
                           .toString()),
                   const Spacer(),
@@ -265,8 +268,8 @@ class _ResponseCard extends StatelessWidget {
             if (response.location != null)
               Text(
                 response.location!,
-                style: const TextStyle(
-                    fontSize: 11, color: AppColors.textMuted),
+                style:
+                    const TextStyle(fontSize: 11, color: AppColors.textMuted),
               ),
             const SizedBox(width: 8),
             const Icon(Icons.expand_more_rounded,

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 import '../../providers/form_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/models.dart';
 import '../../widgets/app_logo.dart';
@@ -22,6 +24,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<FormProvider>().fetchForms();
+      context.read<NotificationProvider>().loadNotifications();
     });
   }
 
@@ -29,6 +32,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final forms = context.watch<FormProvider>();
     final auth = context.watch<AuthProvider>();
+    final notifProv = context.watch<NotificationProvider>();
     final userName = auth.currentUser?.name ?? '';
 
     return Scaffold(
@@ -38,21 +42,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
         surfaceTintColor: Colors.transparent,
         title: const AppLogo(size: 22),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            color: AppColors.textLight,
-            onPressed: () {},
-            tooltip: 'Notifications',
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                color: AppColors.textLight,
+                onPressed: () {
+                  notifProv.markAllRead();
+                },
+                tooltip: 'Notifications',
+              ),
+              if (notifProv.unreadCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppColors.danger,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
           ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: _UserAvatar(name: userName),
+            child: _UserAvatar(
+              name: userName,
+              avatarUrl: auth.currentUser?.avatarUrl,
+            ),
           ),
         ],
       ),
       body: RefreshIndicator(
         color: AppColors.primary,
-        onRefresh: () => context.read<FormProvider>().fetchForms(),
+        onRefresh: () async {
+          await Future.wait([
+            context.read<FormProvider>().fetchForms(),
+            context.read<NotificationProvider>().loadNotifications(),
+          ]);
+        },
         child: CustomScrollView(
           slivers: [
             // Header
@@ -81,7 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                'Manage your active forms, analyze response data, and create new architectural data structures.',
+                                'Manage your active forms, analyze response data, and create new forms.',
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: AppColors.textLight,
@@ -106,7 +137,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       icon: const Icon(Icons.add_rounded, size: 20),
                       label: const Text('Create New Form'),
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -122,8 +154,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             icon: Icons.inbox_rounded,
                             label: 'TOTAL RESPONSES',
                             value: forms.totalResponses.toString(),
-                            trend: '+18.4% from last month',
-                            trendPositive: true,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -234,115 +264,248 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
 
-            // Recent activity
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Recent Activity',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const _ActivityItem(
-                      message: 'New response received for ',
-                      formName: '"Customer Experience 2024"',
-                      time: '2 minutes ago • United States',
-                    ),
-                    const _ActivityItem(
-                      message: 'Form ',
-                      formName: '"Event Registration"',
-                      time: '1 hour ago • Revision #12',
-                      suffix: ' was updated by Sarah L.',
-                    ),
-                    const _ActivityItem(
-                      message: 'Analytics report exported for ',
-                      formName: '"Product Feedback"',
-                      time: '4 hours ago • PDF Format',
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Upgrade to Pro card
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              // Recent Activity
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          const Text(
-                            'Upgrade to Pro',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
+                          Text(
+                            'Recent Activity',
+                            style: GoogleFonts.inter(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textDark,
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          const Text(
-                            'Unlock conditional logic, white-labeling and unlimited responses.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white70,
+                          const Spacer(),
+                          if (notifProv.unreadCount > 0)
+                            TextButton(
+                              onPressed: notifProv.markAllRead,
+                              child: Text(
+                                'Mark all read',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: AppColors.primary,
+                                ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xFF1E3A8A),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 12),
-                              textStyle: const TextStyle(
-                                  fontWeight: FontWeight.w600, fontSize: 14),
-                            ),
-                            child: const Text('Upgrade Workspace'),
-                          ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
+                      const SizedBox(height: 12),
+
+                      // Notification items or empty state
+                      if (notifProv.isLoading)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        )
+                      else if (notifProv.notifications.isEmpty)
+                        _buildEmptyActivity()
+                      else ...[
+                        ...notifProv.notifications
+                            .take(5)
+                            .map((n) => _NotificationItem(notification: n)),
+                      ],
+
+                      const SizedBox(height: 20),
+
+                      // Upgrade to Pro card
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Upgrade to Pro',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Unlock conditional logic, white-labeling and unlimited responses.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white70,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () {},
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: const Color(0xFF1E3A8A),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
+                                textStyle: const TextStyle(
+                                    fontWeight: FontWeight.w600, fontSize: 14),
+                              ),
+                              child: const Text('Upgrade Workspace'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
-            ),
             ],
           ],
         ),
       ),
     );
   }
+
+  Widget _buildEmptyActivity() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.notifications_none_outlined,
+                color: AppColors.textMuted, size: 24),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No recent activity yet',
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDark,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Activity will appear here when someone\nsubmits a response to your forms.',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: AppColors.textLight,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-// Stat Card
+// ── Notification Item ──────────────────────────────────────────────────────────
+
+class _NotificationItem extends StatelessWidget {
+  final NotificationModel notification;
+  const _NotificationItem({required this.notification});
+
+  @override
+  Widget build(BuildContext context) {
+    final timeAgo = _formatTimeAgo(notification.createdAt);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 5),
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color:
+                  notification.isRead ? AppColors.textMuted : AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  notification.title,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight:
+                        notification.isRead ? FontWeight.w400 : FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  notification.message,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.textMed,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  timeAgo,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTimeAgo(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return DateFormat('MMM d').format(dt);
+  }
+}
+
+// ── Stat Card ──────────────────────────────────────────────────────────────────
 
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  final String? trend;
-  final bool trendPositive;
 
   const _StatCard({
     required this.icon,
     required this.label,
     required this.value,
-    this.trend,
-    this.trendPositive = false,
   });
 
   @override
@@ -389,24 +552,13 @@ class _StatCard extends StatelessWidget {
               color: AppColors.textLight,
             ),
           ),
-          if (trend != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              trend!,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: trendPositive ? AppColors.success : AppColors.danger,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
         ],
       ),
     );
   }
 }
 
-// View Toggle Button
+// ── View Toggle Button ─────────────────────────────────────────────────────────
 
 class _ViewToggleBtn extends StatelessWidget {
   final IconData icon;
@@ -437,7 +589,7 @@ class _ViewToggleBtn extends StatelessWidget {
   }
 }
 
-// Form Card
+// ── Form Card ──────────────────────────────────────────────────────────────────
 
 class _FormCard extends StatefulWidget {
   final FormModel form;
@@ -463,7 +615,9 @@ class _FormCardState extends State<_FormCard> {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: _hovered ? AppColors.primary.withValues(alpha: 0.35) : AppColors.border,
+            color: _hovered
+                ? AppColors.primary.withValues(alpha: 0.35)
+                : AppColors.border,
           ),
           boxShadow: _hovered
               ? [
@@ -482,7 +636,6 @@ class _FormCardState extends State<_FormCard> {
             children: [
               Row(
                 children: [
-                  // Form icon
                   Container(
                     width: 42,
                     height: 42,
@@ -533,7 +686,7 @@ class _FormCardState extends State<_FormCard> {
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert_rounded,
                         color: AppColors.textLight, size: 20),
-                    onSelected: (value) {
+                    onSelected: (value) async {
                       switch (value) {
                         case 'edit':
                           formProvider.openFormBuilder(widget.form);
@@ -546,7 +699,21 @@ class _FormCardState extends State<_FormCard> {
                           context.push('/export/${widget.form.id}');
                           break;
                         case 'delete':
-                          formProvider.deleteForm(widget.form.id);
+                          final ok =
+                              await formProvider.deleteForm(widget.form.id);
+                          if (!context.mounted) return;
+                          if (!ok) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content:
+                                    Text(formProvider.error ?? 'Delete failed'),
+                                backgroundColor: AppColors.danger,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10)),
+                              ),
+                            );
+                          }
                           break;
                       }
                     },
@@ -555,8 +722,8 @@ class _FormCardState extends State<_FormCard> {
                         value: 'edit',
                         child: Row(
                           children: [
-                            const Icon(Icons.edit_outlined, size: 16,
-                                color: AppColors.textMed),
+                            const Icon(Icons.edit_outlined,
+                                size: 16, color: AppColors.textMed),
                             const SizedBox(width: 10),
                             Text('Edit Builder',
                                 style: GoogleFonts.inter(fontSize: 14)),
@@ -567,8 +734,8 @@ class _FormCardState extends State<_FormCard> {
                         value: 'preview',
                         child: Row(
                           children: [
-                            const Icon(Icons.open_in_new_rounded, size: 16,
-                                color: AppColors.textMed),
+                            const Icon(Icons.open_in_new_rounded,
+                                size: 16, color: AppColors.textMed),
                             const SizedBox(width: 10),
                             Text('Preview Form',
                                 style: GoogleFonts.inter(fontSize: 14)),
@@ -579,8 +746,8 @@ class _FormCardState extends State<_FormCard> {
                         value: 'export',
                         child: Row(
                           children: [
-                            const Icon(Icons.download_rounded, size: 16,
-                                color: AppColors.textMed),
+                            const Icon(Icons.download_rounded,
+                                size: 16, color: AppColors.textMed),
                             const SizedBox(width: 10),
                             Text('Export Data',
                                 style: GoogleFonts.inter(fontSize: 14)),
@@ -604,11 +771,9 @@ class _FormCardState extends State<_FormCard> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 12),
               Divider(color: AppColors.border.withValues(alpha: 0.7)),
               const SizedBox(height: 8),
-
               Row(
                 children: [
                   const Icon(Icons.inbox_outlined,
@@ -669,7 +834,7 @@ class _FormCardState extends State<_FormCard> {
   }
 }
 
-// Status Badge
+// ── Status Badge ───────────────────────────────────────────────────────────────
 
 class _StatusBadge extends StatelessWidget {
   final bool isLive;
@@ -710,79 +875,7 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-// ── Activity Item ───────────────────────────────────────────────────────────────
-
-class _ActivityItem extends StatelessWidget {
-  final String message;
-  final String formName;
-  final String time;
-  final String? suffix;
-
-  const _ActivityItem({
-    required this.message,
-    required this.formName,
-    required this.time,
-    this.suffix,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(top: 5),
-            width: 7,
-            height: 7,
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(
-                        fontSize: 13, color: AppColors.textMed),
-                    children: [
-                      TextSpan(text: message),
-                      TextSpan(
-                        text: formName,
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      if (suffix != null) TextSpan(text: suffix),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  time,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-
-
-// Empty State
+// ── Empty State ────────────────────────────────────────────────────────────────
 
 class _EmptyFormsState extends StatelessWidget {
   final VoidCallback onCreateTap;
@@ -847,13 +940,12 @@ class _EmptyFormsState extends StatelessWidget {
   }
 }
 
-
-
-// User Avatar
+// ── User Avatar ────────────────────────────────────────────────────────────────
 
 class _UserAvatar extends StatelessWidget {
   final String name;
-  const _UserAvatar({required this.name});
+  final String? avatarUrl;
+  const _UserAvatar({required this.name, this.avatarUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -861,14 +953,18 @@ class _UserAvatar extends StatelessWidget {
     return CircleAvatar(
       radius: 17,
       backgroundColor: AppColors.primary,
-      child: Text(
-        initials,
-        style: GoogleFonts.inter(
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
-          fontSize: 13,
-        ),
-      ),
+      backgroundImage:
+          (avatarUrl?.isNotEmpty ?? false) ? NetworkImage(avatarUrl!) : null,
+      child: (avatarUrl?.isNotEmpty ?? false)
+          ? null
+          : Text(
+              initials,
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
     );
   }
 }

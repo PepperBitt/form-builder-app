@@ -22,11 +22,8 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       await _authService.login(email, password);
-      _currentUser = UserModel(
-        id: email,
-        name: email.split('@').first,
-        email: email,
-      );
+      // Fetch real profile from backend instead of deriving from email.
+      await _fetchProfile(fallbackEmail: email);
       _isLoggedIn = true;
       _isLoading = false;
       notifyListeners();
@@ -39,8 +36,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Backend only stores email + password. `name` is captured on the client
-  /// for display purposes but not persisted server-side.
   Future<bool> signup(String name, String email, String password) async {
     _isLoading = true;
     _error = null;
@@ -50,8 +45,47 @@ class AuthProvider extends ChangeNotifier {
       await _authService.signup(email, password);
       // Auto-login after successful signup
       await _authService.login(email, password);
-      _currentUser = UserModel(id: email, name: name, email: email);
+      // Fetch real profile (name may not be set yet, so use provided name as
+      // fallback until the user saves their profile).
+      await _fetchProfile(fallbackEmail: email, fallbackName: name);
       _isLoggedIn = true;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Refresh profile data from the backend (e.g. after editing on ProfileScreen).
+  Future<void> refreshProfile() async {
+    try {
+      await _fetchProfile(fallbackEmail: _currentUser?.email ?? '');
+      notifyListeners();
+    } catch (_) {
+      // Silently ignore refresh failures — UI keeps showing cached data.
+    }
+  }
+
+  /// Update full_name and/or avatar_url on the backend, then refresh local model.
+  Future<bool> updateProfile({String? fullName, String? avatarUrl}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final res = await _authService.updateProfile(
+        fullName: fullName,
+        avatarUrl: avatarUrl,
+      );
+      _currentUser = UserModel(
+        id: (res['id'] ?? _currentUser?.id ?? '') as String,
+        name: (res['full_name'] ?? _currentUser?.name ?? '') as String,
+        email: (res['email'] ?? _currentUser?.email ?? '') as String,
+        avatarUrl: (res['avatar_url'] ?? _currentUser?.avatarUrl) as String?,
+      );
       _isLoading = false;
       notifyListeners();
       return true;
@@ -73,5 +107,35 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private helpers
+  // ---------------------------------------------------------------------------
+
+  Future<void> _fetchProfile({
+    required String fallbackEmail,
+    String? fallbackName,
+  }) async {
+    try {
+      final profile = await _authService.getProfile();
+      final rawName = profile['full_name'];
+      final name = (rawName is String && rawName.isNotEmpty)
+          ? rawName
+          : (fallbackName ?? fallbackEmail.split('@').first);
+      _currentUser = UserModel(
+        id: (profile['id'] ?? fallbackEmail) as String,
+        name: name,
+        email: (profile['email'] ?? fallbackEmail) as String,
+        avatarUrl: profile['avatar_url'] as String?,
+      );
+    } catch (_) {
+      // If profile fetch fails, fall back to minimal local model.
+      _currentUser ??= UserModel(
+        id: fallbackEmail,
+        name: fallbackName ?? fallbackEmail.split('@').first,
+        email: fallbackEmail,
+      );
+    }
   }
 }

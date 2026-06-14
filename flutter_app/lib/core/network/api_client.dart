@@ -37,6 +37,20 @@ class ApiClient {
     return _handle(res);
   }
 
+  Future<dynamic> put(String path, {Object? body}) async {
+    final res = await http.put(
+      _uri(path),
+      headers: _jsonHeaders(),
+      body: body == null ? null : jsonEncode(body),
+    );
+    return _handle(res);
+  }
+
+  Future<dynamic> delete(String path) async {
+    final res = await http.delete(_uri(path), headers: _jsonHeaders());
+    return _handle(res);
+  }
+
   /// Backend's /api/auth/login expects OAuth2 form-data, not JSON.
   Future<dynamic> postForm(String path, Map<String, String> fields) async {
     final headers = <String, String>{};

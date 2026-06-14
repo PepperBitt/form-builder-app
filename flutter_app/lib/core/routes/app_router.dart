@@ -13,6 +13,8 @@ import '../../features/responses/responses_dashboard_screen.dart';
 import '../../features/renderer/public_form_screen.dart';
 import '../../features/onboarding/splash_screen.dart';
 import '../../features/onboarding/welcome_screen.dart';
+import '../../features/settings/settings_screen.dart';
+import '../../features/profile/profile_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -107,6 +109,13 @@ class AppRouter {
             ),
           ]),
         ],
+      ),
+
+      // ── Profile (pushed from Settings) ──────────────────────────────────────
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
 
       // ── Form builder (full screen) ──────────────────────────────────────────
@@ -233,219 +242,6 @@ class DashboardShell extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ── Settings Screen ───────────────────────────────────────────────────────────
-
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final auth = context.read<AuthProvider>();
-    final userName = auth.currentUser?.name ?? '';
-    final userEmail = auth.currentUser?.email ?? '';
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'Settings',
-          style: GoogleFonts.inter(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textDark,
-          ),
-        ),
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: Colors.transparent,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.border),
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          // Profile card
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor: AppColors.primary,
-                  child: Text(
-                    userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        userName.isNotEmpty ? userName : 'User',
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        userEmail.isNotEmpty ? userEmail : 'No email',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: AppColors.textLight,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'Free',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-          _section('Account', [
-            _tile(context, Icons.person_outline_rounded, 'Profile', () {}),
-            _tile(context, Icons.notifications_outlined, 'Notifications', () {}),
-            _tile(context, Icons.lock_outline_rounded, 'Privacy & Security', () {}),
-          ]),
-          const SizedBox(height: 16),
-          _section('Workspace', [
-            _tile(context, Icons.group_outlined, 'Team Members', () {}),
-            _tile(context, Icons.card_membership_outlined, 'Billing & Plan', () {}),
-          ]),
-          const SizedBox(height: 16),
-          _section('Support', [
-            _tile(context, Icons.help_outline_rounded, 'Help Center', () {}),
-            _tile(context, Icons.info_outline_rounded, 'About', () {}),
-          ]),
-          const SizedBox(height: 24),
-
-          // Sign out
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: ListTile(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              leading: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: AppColors.dangerLight,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.logout_rounded,
-                    color: AppColors.danger, size: 18),
-              ),
-              title: Text(
-                'Sign Out',
-                style: GoogleFonts.inter(
-                  color: AppColors.danger,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 15,
-                ),
-              ),
-              onTap: () {
-                auth.logout();
-                context.go('/login');
-              },
-            ),
-          ),
-          const SizedBox(height: 32),
-        ],
-      ),
-    );
-  }
-
-  Widget _section(String title, List<Widget> tiles) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            title.toUpperCase(),
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.8,
-              color: AppColors.textMuted,
-            ),
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Column(children: tiles),
-        ),
-      ],
-    );
-  }
-
-  Widget _tile(
-      BuildContext context, IconData icon, String label, VoidCallback onTap) {
-    return ListTile(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      leading: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(icon, color: AppColors.textMed, size: 18),
-      ),
-      title: Text(
-        label,
-        style: GoogleFonts.inter(
-          fontSize: 15,
-          fontWeight: FontWeight.w400,
-          color: AppColors.textDark,
-        ),
-      ),
-      trailing:
-          const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
-      onTap: onTap,
     );
   }
 }

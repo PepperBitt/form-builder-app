@@ -24,6 +24,26 @@ class AuthService {
     });
   }
 
+  /// GET /api/users/profile — returns the backend profile for the logged-in user.
+  Future<Map<String, dynamic>> getProfile() async {
+    final res = await _api.get(ApiConstants.userProfile);
+    return res as Map<String, dynamic>;
+  }
+
+  /// PUT /api/users/profile — updates full_name and/or avatar_url.
+  Future<Map<String, dynamic>> updateProfile({
+    String? fullName,
+    String? avatarUrl,
+  }) async {
+    final body = <String, dynamic>{};
+    if (fullName != null) body['full_name'] = fullName;
+    if (avatarUrl != null) body['avatar_url'] = avatarUrl;
+
+    final res = await _api.put(ApiConstants.userProfile, body: body)
+        as Map<String, dynamic>;
+    return res;
+  }
+
   void logout() {
     _api.setAuthToken(null);
   }

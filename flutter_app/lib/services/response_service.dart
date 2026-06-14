@@ -43,7 +43,8 @@ class ResponseService {
         id: m['response_id'] as String,
         formId: formId,
         data: (m['answers'] ?? {}) as Map<String, dynamic>,
-        submittedAt: DateTime.tryParse(m['submitted_at']?.toString() ?? '') ?? DateTime.now(),
+        submittedAt: DateTime.tryParse(m['submitted_at']?.toString() ?? '') ??
+            DateTime.now(),
       );
     }).toList();
   }

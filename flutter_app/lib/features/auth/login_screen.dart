@@ -245,8 +245,7 @@ class _LoginScreenState extends State<LoginScreen>
                                         auth.isLoading ? null : _handleLogin,
                                     style: ElevatedButton.styleFrom(
                                       shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10),
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
                                     ),
                                     child: auth.isLoading
@@ -309,8 +308,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     onPressed: () {},
                                     style: OutlinedButton.styleFrom(
                                       shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10),
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
                                     ),
                                     child: Row(
@@ -333,46 +331,48 @@ class _LoginScreenState extends State<LoginScreen>
                                 ),
                                 const SizedBox(height: 24),
 
-                      // Sign up link
-                      Center(
-                        child: RichText(
-                          text: TextSpan(
-                            style: const TextStyle(
-                                fontSize: 13, color: AppColors.textLight),
-                            children: [
-                              const TextSpan(text: "New to $appName? "),
-                              WidgetSpan(
-                                child: GestureDetector(
-                                  onTap: () => context.go('/signup'),
-                                  child: const Text(
-                                    'Create workspace',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.w600,
+                                // Sign up link
+                                Center(
+                                  child: RichText(
+                                    text: TextSpan(
+                                      style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.textLight),
+                                      children: [
+                                        const TextSpan(
+                                            text: "New to $appName? "),
+                                        WidgetSpan(
+                                          child: GestureDetector(
+                                            onTap: () => context.go('/signup'),
+                                            child: const Text(
+                                              'Create workspace',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: AppColors.primary,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
-    ),
-  ),
-),
-],
-),
-);
-}
+    );
+  }
 }
 
 // ── Error Banner ──────────────────────────────────────────────────────────────
@@ -440,8 +440,7 @@ class _GoogleIcon extends StatelessWidget {
       height: 18,
       child: Stack(
         children: [
-          Icon(Icons.g_mobiledata_rounded,
-              size: 22, color: Color(0xFF4285F4)),
+          Icon(Icons.g_mobiledata_rounded, size: 22, color: Color(0xFF4285F4)),
         ],
       ),
     );
