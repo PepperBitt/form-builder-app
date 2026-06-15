@@ -59,6 +59,7 @@ class FormSummary(BaseModel):
     title: str
     status: str
     description: Optional[str] = None
+    total_responses: int = 0
     created_at: datetime
     updated_at: datetime
 
@@ -69,6 +70,7 @@ class FormSummary(BaseModel):
                 "title": "Customer Feedback",
                 "status": "draft",
                 "description": None,
+                "total_responses": 5,
                 "created_at": "2026-06-10T12:00:00",
                 "updated_at": "2026-06-10T12:00:00",
             }
@@ -82,6 +84,9 @@ class FormDetail(BaseModel):
     description: Optional[str] = None
     status: str
     form_schema: dict[str, Any] = Field(..., alias="schema")
+    total_responses: int = 0
+    share_token: Optional[str] = None
+    share_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
@@ -94,10 +99,27 @@ class FormDetail(BaseModel):
                 "description": None,
                 "status": "published",
                 "schema": {"fields": [{"type": "text", "label": "Name", "required": True}]},
+                "total_responses": 3,
+                "share_token": "abc123xyz",
+                "share_url": "http://localhost:8000/api/forms/share/abc123xyz",
                 "created_at": "2026-06-10T12:00:00",
                 "updated_at": "2026-06-10T12:00:00",
             }
         },
+    )
+
+
+class ShareLinkResponse(BaseModel):
+    share_token: str
+    share_url: str
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "share_token": "abc123xyz",
+                "share_url": "http://localhost:8000/api/forms/share/abc123xyz",
+            }
+        }
     )
 
 
