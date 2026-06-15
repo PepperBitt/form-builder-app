@@ -44,8 +44,9 @@ class _DynamicFieldState extends State<DynamicField> {
             case FieldType.longText:
             case FieldType.email:
             case FieldType.number:
-              if (_textCtrl.text.trim().isEmpty)
+              if (_textCtrl.text.trim().isEmpty) {
                 return 'This field is required';
+              }
               if (field.type == FieldType.email &&
                   !_textCtrl.text.contains('@')) {
                 return 'Enter a valid email';

@@ -6,7 +6,6 @@ import 'core/routes/app_router.dart';
 import 'providers/auth_provider.dart';
 import 'providers/form_provider.dart';
 import 'providers/response_provider.dart';
-import 'providers/user_provider.dart';
 import 'providers/notification_provider.dart';
 
 /// The display name of the application.
@@ -23,7 +22,6 @@ class TheArchitectApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => FormProvider()),
         ChangeNotifierProvider(create: (_) => ResponseProvider()),
-        ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: Consumer<AuthProvider>(

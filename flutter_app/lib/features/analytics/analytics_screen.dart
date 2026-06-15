@@ -122,7 +122,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     return [
       // ── Total Responses metric ──────────────────────────────────────────
-      _SectionTitle('Key Metrics'),
+      const _SectionTitle('Key Metrics'),
       const SizedBox(height: 10),
       _MetricCard(
         label: 'Total Responses',
@@ -133,7 +133,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       const SizedBox(height: 24),
 
       // ── Field Breakdown ─────────────────────────────────────────────────
-      _SectionTitle('Field Breakdown'),
+      const _SectionTitle('Field Breakdown'),
       const SizedBox(height: 10),
 
       if (analytics.isEmpty)
