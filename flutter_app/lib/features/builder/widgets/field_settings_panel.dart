@@ -88,7 +88,8 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                     color: AppColors.primaryLight,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Icon(_fieldIcon(field.type), size: 15, color: AppColors.primary),
+                  child: Icon(_fieldIcon(field.type),
+                      size: 15, color: AppColors.primary),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -102,7 +103,8 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 18, color: AppColors.textLight),
+                  icon: const Icon(Icons.close,
+                      size: 18, color: AppColors.textLight),
                   onPressed: forms.deselectField,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -120,7 +122,7 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // FIELD LABEL
-                  _Label('FIELD LABEL'),
+                  const _Label('FIELD LABEL'),
                   const SizedBox(height: 5),
                   _Input(
                     controller: _labelCtrl,
@@ -130,7 +132,7 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                   const SizedBox(height: 14),
 
                   // HELPER TEXT
-                  _Label('HELPER TEXT'),
+                  const _Label('HELPER TEXT'),
                   const SizedBox(height: 5),
                   _Input(
                     controller: _helperCtrl,
@@ -145,7 +147,7 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                       field.type == FieldType.checkbox) ...[
                     Row(
                       children: [
-                        _Label('OPTIONS'),
+                        const _Label('OPTIONS'),
                         const Spacer(),
                         GestureDetector(
                           onTap: () {
@@ -154,7 +156,8 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                           },
                           child: const Row(
                             children: [
-                              Icon(Icons.add, size: 14, color: AppColors.primary),
+                              Icon(Icons.add,
+                                  size: 14, color: AppColors.primary),
                               SizedBox(width: 3),
                               Text(
                                 'Add',
@@ -188,7 +191,8 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add, size: 16, color: AppColors.textLight),
+                            Icon(Icons.add,
+                                size: 16, color: AppColors.textLight),
                             SizedBox(width: 6),
                             Text(
                               'Add Option',
@@ -216,10 +220,11 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                   if (field.type == FieldType.rating) ...[
                     Row(
                       children: [
-                        _Label('RATING SCALE'),
+                        const _Label('RATING SCALE'),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: AppColors.primaryLight,
                             borderRadius: BorderRadius.circular(4),
@@ -250,10 +255,14 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                             width: 34,
                             height: 34,
                             decoration: BoxDecoration(
-                              color: active ? AppColors.primary : AppColors.background,
+                              color: active
+                                  ? AppColors.primary
+                                  : AppColors.background,
                               borderRadius: BorderRadius.circular(7),
                               border: Border.all(
-                                color: active ? AppColors.primary : AppColors.border,
+                                color: active
+                                    ? AppColors.primary
+                                    : AppColors.border,
                               ),
                             ),
                             child: Center(
@@ -262,7 +271,9 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: active ? Colors.white : AppColors.textLight,
+                                  color: active
+                                      ? Colors.white
+                                      : AppColors.textLight,
                                 ),
                               ),
                             ),
@@ -271,9 +282,10 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                       }),
                     ),
                     const SizedBox(height: 6),
-                    Text(
+                    const Text(
                       'Tap a number to set the maximum rating.',
-                      style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      style:
+                          TextStyle(fontSize: 11, color: AppColors.textMuted),
                     ),
                     const SizedBox(height: 18),
                   ],
@@ -288,12 +300,14 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.info_outline, size: 16, color: AppColors.primary),
+                          Icon(Icons.info_outline,
+                              size: 16, color: AppColors.primary),
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               'Respondents will see a date picker popup when they tap this field.',
-                              style: TextStyle(fontSize: 12, color: AppColors.primary),
+                              style: TextStyle(
+                                  fontSize: 12, color: AppColors.primary),
                             ),
                           ),
                         ],
@@ -312,12 +326,14 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.info_outline, size: 16, color: AppColors.draft),
+                          Icon(Icons.info_outline,
+                              size: 16, color: AppColors.draft),
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               'Respondents can upload files. Max 10 MB per file.',
-                              style: TextStyle(fontSize: 12, color: AppColors.draft),
+                              style: TextStyle(
+                                  fontSize: 12, color: AppColors.draft),
                             ),
                           ),
                         ],
@@ -339,7 +355,7 @@ class _FieldSettingsPanelState extends State<FieldSettingsPanel> {
                   const SizedBox(height: 10),
 
                   // ── Preview chip ─────────────────────────────────
-                  _Label('QUICK PREVIEW'),
+                  const _Label('QUICK PREVIEW'),
                   const SizedBox(height: 8),
                   _FieldPreview(field: field),
                   const SizedBox(height: 20),
@@ -550,12 +566,12 @@ class _FieldPreview extends StatelessWidget {
 
       case FieldType.date:
         return _previewContainer(
-          child: Row(
+          child: const Row(
             children: [
-              const Icon(Icons.calendar_today_outlined,
+              Icon(Icons.calendar_today_outlined,
                   size: 16, color: AppColors.textMuted),
-              const SizedBox(width: 8),
-              const Text('mm/dd/yyyy',
+              SizedBox(width: 8),
+              Text('mm/dd/yyyy',
                   style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
             ],
           ),
@@ -638,7 +654,8 @@ class _Input extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(fontSize: 13, color: AppColors.textMuted),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.border),

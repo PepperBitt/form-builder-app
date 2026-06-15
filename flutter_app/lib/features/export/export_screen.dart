@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/form_provider.dart';
@@ -16,10 +17,53 @@ class ExportScreen extends StatefulWidget {
 
 class _ExportScreenState extends State<ExportScreen> {
   String _selectedFormat = 'pdf';
-  String _selectedDateRange = '30';
+  String _selectedDateRange = 'all';
   bool _isExporting = false;
   Map<String, bool> _selectedFields = {};
   FormModel? _form;
+
+  // format metadata
+  static const _formats = [
+    _FormatMeta(
+      id: 'pdf',
+      label: 'PDF',
+      description: 'Formatted report',
+      icon: Icons.picture_as_pdf_rounded,
+      color: Color(0xFFDC2626),
+      bgColor: Color(0xFFFEE2E2),
+    ),
+    _FormatMeta(
+      id: 'xlsx',
+      label: 'Excel',
+      description: 'Spreadsheet',
+      icon: Icons.table_chart_rounded,
+      color: Color(0xFF059669),
+      bgColor: Color(0xFFD1FAE5),
+    ),
+    _FormatMeta(
+      id: 'csv',
+      label: 'CSV',
+      description: 'Database import',
+      icon: Icons.grid_on_rounded,
+      color: Color(0xFF7C3AED),
+      bgColor: Color(0xFFEDE9FE),
+    ),
+    _FormatMeta(
+      id: 'json',
+      label: 'JSON',
+      description: 'Raw data',
+      icon: Icons.data_object_rounded,
+      color: Color(0xFFD97706),
+      bgColor: Color(0xFFFEF3C7),
+    ),
+  ];
+
+  static const _dateRanges = [
+    ('7', 'Last 7 days'),
+    ('30', 'Last 30 days'),
+    ('90', 'Last 90 days'),
+    ('all', 'All time'),
+  ];
 
   @override
   void initState() {
@@ -44,9 +88,23 @@ class _ExportScreenState extends State<ExportScreen> {
     setState(() => _isExporting = true);
     try {
       final svc = ExportService();
-      final bytes = _selectedFormat == 'pdf'
-          ? await svc.downloadPdf(widget.formId)
-          : await svc.downloadExcel(widget.formId);
+      final List<int> bytes;
+      switch (_selectedFormat) {
+        case 'pdf':
+          bytes = await svc.downloadPdf(widget.formId);
+          break;
+        case 'xlsx':
+          bytes = await svc.downloadExcel(widget.formId);
+          break;
+        case 'csv':
+          bytes = await svc.downloadCsv(widget.formId);
+          break;
+        case 'json':
+          bytes = await svc.downloadJson(widget.formId);
+          break;
+        default:
+          bytes = await svc.downloadPdf(widget.formId);
+      }
 
       if (!mounted) return;
       setState(() => _isExporting = false);
@@ -54,32 +112,39 @@ class _ExportScreenState extends State<ExportScreen> {
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle_outline, color: Colors.white),
-              const SizedBox(width: 8),
+              const Icon(Icons.check_circle_rounded,
+                  color: Colors.white, size: 18),
+              const SizedBox(width: 10),
               Text(
-                  'Export ready: ${bytes.length ~/ 1024} KB (${_selectedFormat.toUpperCase()})'),
+                  'Export ready · ${bytes.length ~/ 1024} KB · ${_selectedFormat.toUpperCase()}'),
             ],
           ),
           backgroundColor: AppColors.live,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          duration: const Duration(seconds: 4),
         ),
       );
-      // NOTE: For actual file saving on device, add `path_provider` +
-      // `share_plus` packages and write `bytes` to disk. Skipped here to
-      // keep pubspec minimal — the download itself works.
     } catch (e) {
       if (!mounted) return;
       setState(() => _isExporting = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Export failed: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.danger,
           behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     }
   }
+
+  _FormatMeta get _currentFormat =>
+      _formats.firstWhere((f) => f.id == _selectedFormat);
+
+  int get _selectedFieldCount => _selectedFields.values.where((v) => v).length;
 
   @override
   Widget build(BuildContext context) {
@@ -88,366 +153,644 @@ class _ExportScreenState extends State<ExportScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
-        title: const Text('Export Data'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Export Data',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
+            ),
+            if (_form != null)
+              Text(
+                _form!.title,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: AppColors.textMuted,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+          ],
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: AppColors.border),
+        ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
         children: [
-          // Subtitle
-          Text(
-            'Configure your data parameters and file format for the "${_form?.title ?? 'Form'}" responses.',
-            style: const TextStyle(fontSize: 13, color: AppColors.textLight),
+          // ── Hero summary card ─────────────────────────────────────────────
+          _HeroCard(
+            form: _form,
+            format: _currentFormat,
+            fieldCount: _selectedFieldCount,
+            dateRange: _selectedDateRange,
           ),
           const SizedBox(height: 24),
 
-          // Format Selection
-          _SectionHeader('Format Selection'),
+          // ── Format Selection ──────────────────────────────────────────────
+          _sectionLabel('Export Format'),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _FormatCard(
-                  icon: Icons.picture_as_pdf_outlined,
-                  label: 'PDF',
-                  subtitle: 'Forms',
-                  isSelected: _selectedFormat == 'pdf',
-                  onTap: () => setState(() => _selectedFormat = 'pdf'),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 4,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 0.85,
+            children: _formats.map((fmt) {
+              final isSelected = _selectedFormat == fmt.id;
+              return GestureDetector(
+                onTap: () => setState(() => _selectedFormat = fmt.id),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  decoration: BoxDecoration(
+                    color: isSelected ? fmt.bgColor : AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected
+                          ? fmt.color.withValues(alpha: 0.6)
+                          : AppColors.border,
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: fmt.color.withValues(alpha: 0.12),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            )
+                          ]
+                        : [],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 160),
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? fmt.color.withValues(alpha: 0.15)
+                              : AppColors.background,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          fmt.icon,
+                          size: 18,
+                          color: isSelected ? fmt.color : AppColors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      Text(
+                        fmt.label,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: isSelected ? fmt.color : AppColors.textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        fmt.description,
+                        style: GoogleFonts.inter(
+                          fontSize: 9,
+                          color: isSelected
+                              ? fmt.color.withValues(alpha: 0.8)
+                              : AppColors.textMuted,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _FormatCard(
-                  icon: Icons.table_chart_outlined,
-                  label: 'Excel',
-                  subtitle: '(XLSX)\nData Analysis',
-                  isSelected: _selectedFormat == 'xlsx',
-                  onTap: () => setState(() => _selectedFormat = 'xlsx'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _FormatCard(
-                  icon: Icons.grid_on_outlined,
-                  label: 'CSV',
-                  subtitle: 'Database\nExport',
-                  isSelected: _selectedFormat == 'csv',
-                  onTap: () => setState(() => _selectedFormat = 'csv'),
-                ),
-              ),
-            ],
+              );
+            }).toList(),
           ),
+
           const SizedBox(height: 24),
 
-          // Date Range
-          _SectionHeader('Date Range Filter'),
+          // ── Date Range ────────────────────────────────────────────────────
+          _sectionLabel('Date Range'),
           const SizedBox(height: 10),
-          _Card(
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
             child: Column(
               children: [
-                _DateInput(label: 'START DATE'),
-                const SizedBox(height: 12),
-                _DateInput(label: 'END DATE'),
-                const SizedBox(height: 14),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
+                // Quick chips
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+                  child: Row(
+                    children: _dateRanges.map((dr) {
+                      final (value, label) = dr;
+                      final sel = _selectedDateRange == value;
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () =>
+                              setState(() => _selectedDateRange = value),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 140),
+                            margin: const EdgeInsets.only(right: 6),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: sel
+                                  ? AppColors.primary
+                                  : AppColors.background,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color:
+                                    sel ? AppColors.primary : AppColors.border,
+                              ),
+                            ),
+                            child: Text(
+                              label,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: sel ? Colors.white : AppColors.textMed,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+
+                // Custom date row
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(14, 12, 14, 14),
                   child: Row(
                     children: [
-                      _QuickDateChip(
-                          label: 'Last 7 Days',
-                          value: '7',
-                          selected: _selectedDateRange,
-                          onSelect: (v) =>
-                              setState(() => _selectedDateRange = v)),
-                      const SizedBox(width: 8),
-                      _QuickDateChip(
-                          label: 'Last 30 Days',
-                          value: '30',
-                          selected: _selectedDateRange,
-                          onSelect: (v) =>
-                              setState(() => _selectedDateRange = v)),
-                      const SizedBox(width: 8),
-                      _QuickDateChip(
-                          label: 'This Quarter',
-                          value: 'quarter',
-                          selected: _selectedDateRange,
-                          onSelect: (v) =>
-                              setState(() => _selectedDateRange = v)),
-                      const SizedBox(width: 8),
-                      _QuickDateChip(
-                          label: 'All Time',
-                          value: 'all',
-                          selected: _selectedDateRange,
-                          onSelect: (v) =>
-                              setState(() => _selectedDateRange = v)),
+                      Expanded(child: _DateInput(label: 'From')),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Icon(Icons.arrow_forward_rounded,
+                            size: 14, color: AppColors.textMuted),
+                      ),
+                      Expanded(child: _DateInput(label: 'To')),
                     ],
                   ),
                 ),
               ],
             ),
           ),
+
           const SizedBox(height: 24),
 
-          // Fields selection
+          // ── Fields Selection ──────────────────────────────────────────────
           Row(
             children: [
-              _SectionHeader('Fields Selection'),
+              _sectionLabel('Include Fields'),
               const Spacer(),
+              Text(
+                '$_selectedFieldCount selected',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 10),
               GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedFields.updateAll((_, __) => true);
-                  });
-                },
-                child: const Text(
-                  'SELECT ALL',
-                  style: TextStyle(
+                onTap: () =>
+                    setState(() => _selectedFields.updateAll((_, __) => true)),
+                child: Text(
+                  'All',
+                  style: GoogleFonts.inter(
                     fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                    letterSpacing: 0.5,
+                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text('·', style: GoogleFonts.inter(color: AppColors.textMuted)),
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: () =>
+                    setState(() => _selectedFields.updateAll((_, __) => false)),
+                child: Text(
+                  'None',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          _Card(
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
             child: Column(
               children: [
                 _FieldCheckRow(
                   id: 'respondentId',
                   label: 'Respondent ID',
-                  subtitle: 'Metadata',
+                  badge: 'Meta',
+                  badgeColor: AppColors.accent,
                   value: _selectedFields['respondentId'] ?? true,
                   onChanged: (v) =>
                       setState(() => _selectedFields['respondentId'] = v!),
                 ),
-                const Divider(height: 1),
+                _divider(),
                 _FieldCheckRow(
                   id: 'submissionDate',
                   label: 'Submission Date',
-                  subtitle: 'Metadata',
+                  badge: 'Meta',
+                  badgeColor: AppColors.accent,
                   value: _selectedFields['submissionDate'] ?? true,
                   onChanged: (v) =>
                       setState(() => _selectedFields['submissionDate'] = v!),
                 ),
-                const Divider(height: 1),
+                _divider(),
                 _FieldCheckRow(
                   id: 'respondentEmail',
                   label: 'Respondent Email',
-                  subtitle: 'Metadata',
+                  badge: 'Meta',
+                  badgeColor: AppColors.accent,
                   value: _selectedFields['respondentEmail'] ?? true,
                   onChanged: (v) =>
                       setState(() => _selectedFields['respondentEmail'] = v!),
                 ),
-                if (_form != null)
-                  ...List.generate(
-                    _form!.fields.length,
-                    (i) {
-                      final field = _form!.fields[i];
-                      return Column(
-                        children: [
-                          const Divider(height: 1),
-                          _FieldCheckRow(
-                            id: field.id,
-                            label: field.label.isEmpty
-                                ? field.type.label
-                                : field.label,
-                            subtitle: 'Question ${i + 1}',
-                            value: _selectedFields[field.id] ?? false,
-                            onChanged: (v) =>
-                                setState(() => _selectedFields[field.id] = v!),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+                if (_form != null && _form!.fields.isNotEmpty)
+                  ...List.generate(_form!.fields.length, (i) {
+                    final field = _form!.fields[i];
+                    return Column(
+                      children: [
+                        _divider(),
+                        _FieldCheckRow(
+                          id: field.id,
+                          label: field.label.isEmpty
+                              ? field.type.label
+                              : field.label,
+                          badge: 'Q${i + 1}',
+                          badgeColor: AppColors.primary,
+                          value: _selectedFields[field.id] ?? false,
+                          onChanged: (v) =>
+                              setState(() => _selectedFields[field.id] = v!),
+                        ),
+                      ],
+                    );
+                  }),
               ],
             ),
           ),
+
           const SizedBox(height: 24),
 
-          // Ready to export
-          _Card(
+          // ── Export CTA ────────────────────────────────────────────────────
+          _ExportCta(
+            format: _currentFormat,
+            responseCount: _form?.responseCount ?? 0,
+            fieldCount: _selectedFieldCount,
+            isExporting: _isExporting,
+            onExport: _handleExport,
+          ),
+
+          const SizedBox(height: 24),
+
+          // ── Export History empty state ─────────────────────────────────────
+          _sectionLabel('Export History'),
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
             child: Column(
               children: [
-                const Icon(Icons.download_for_offline_outlined,
-                    size: 40, color: AppColors.primary),
-                const SizedBox(height: 8),
-                const Text(
-                  'Ready to export?',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.history_rounded,
+                      size: 22, color: AppColors.textMuted),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'No export history',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textDark,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Approximately ${_form?.responseCount ?? 0} records will be included in this export.',
-                  style: const TextStyle(
-                      fontSize: 13, color: AppColors.textLight),
+                  'Exports aren\'t stored server-side.\nFiles are saved directly to your device.',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.textLight,
+                    height: 1.5,
+                  ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _isExporting ? null : _handleExport,
-                    icon: _isExporting
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Icon(Icons.download_rounded, size: 18),
-                    label: Text(_isExporting ? 'Generating...' : 'Download Data'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionLabel(String text) => Text(
+        text,
+        style: GoogleFonts.inter(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textDark,
+          letterSpacing: -0.1,
+        ),
+      );
+
+  Widget _divider() =>
+      const Divider(height: 1, color: AppColors.border, indent: 16);
+}
+
+// ── Format Metadata ────────────────────────────────────────────────────────────
+
+class _FormatMeta {
+  final String id;
+  final String label;
+  final String description;
+  final IconData icon;
+  final Color color;
+  final Color bgColor;
+
+  const _FormatMeta({
+    required this.id,
+    required this.label,
+    required this.description,
+    required this.icon,
+    required this.color,
+    required this.bgColor,
+  });
+}
+
+// ── Hero Summary Card ──────────────────────────────────────────────────────────
+
+class _HeroCard extends StatelessWidget {
+  final FormModel? form;
+  final _FormatMeta format;
+  final int fieldCount;
+  final String dateRange;
+
+  const _HeroCard({
+    required this.form,
+    required this.format,
+    required this.fieldCount,
+    required this.dateRange,
+  });
+
+  String get _rangeLabel {
+    switch (dateRange) {
+      case '7':
+        return 'Last 7 days';
+      case '30':
+        return 'Last 30 days';
+      case '90':
+        return 'Last 90 days';
+      default:
+        return 'All time';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            format.color.withValues(alpha: 0.08),
+            AppColors.surface,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: format.color.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: format.bgColor,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(format.icon, color: format.color, size: 26),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${format.label} Export',
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
                   ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Generating large files may take a few moments.',
-                  style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 6,
+                  children: [
+                    _Pill(
+                      icon: Icons.inbox_outlined,
+                      label: '${form?.responseCount ?? 0} responses',
+                    ),
+                    _Pill(
+                      icon: Icons.checklist_rounded,
+                      label: '$fieldCount fields',
+                    ),
+                    _Pill(
+                      icon: Icons.calendar_today_outlined,
+                      label: _rangeLabel,
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-
-          // Export History
-          _SectionHeader('Export History'),
-          const SizedBox(height: 10),
-          _Card(
-            child: Column(
-              children: [
-                _ExportHistoryItem(
-                  filename: 'responses_Q3_full.xlsx',
-                  date: 'Yesterday, 4:21 PM • 3.2 MB',
-                ),
-                const Divider(height: 1),
-                _ExportHistoryItem(
-                  filename: 'customer_summary_final.p...',
-                  date: 'Oct 12, 2023 • 14 MB',
-                ),
-                const Divider(height: 1),
-                _ExportHistoryItem(
-                  filename: 'raw_data_dump.csv',
-                  date: 'Oct 10, 2023 • 2.1 MB',
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () {},
-            child: const Text('VIEW FULL HISTORY',
-                style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                    letterSpacing: 0.5)),
-          ),
-          const SizedBox(height: 24),
         ],
       ),
     );
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final String text;
-  const _SectionHeader(this.text);
-
-  @override
-  Widget build(BuildContext context) => Text(
-        text,
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textDark,
-        ),
-      );
-}
-
-class _Card extends StatelessWidget {
-  final Widget child;
-  const _Card({required this.child});
-
-  @override
-  Widget build(BuildContext context) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: child,
-      );
-}
-
-class _FormatCard extends StatelessWidget {
+class _Pill extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String subtitle;
-  final bool isSelected;
-  final VoidCallback onTap;
 
-  const _FormatCard({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.isSelected,
-    required this.onTap,
+  const _Pill({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 11, color: AppColors.textMuted),
+        const SizedBox(width: 3),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Export CTA Card ────────────────────────────────────────────────────────────
+
+class _ExportCta extends StatelessWidget {
+  final _FormatMeta format;
+  final int responseCount;
+  final int fieldCount;
+  final bool isExporting;
+  final VoidCallback onExport;
+
+  const _ExportCta({
+    required this.format,
+    required this.responseCount,
+    required this.fieldCount,
+    required this.isExporting,
+    required this.onExport,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryLight : AppColors.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
-            width: isSelected ? 1.5 : 1,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: format.bgColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(format.icon, color: format.color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ready to export',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    Text(
+                      '$responseCount records · $fieldCount fields · ${format.label}',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.textLight,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon,
-                size: 24,
-                color: isSelected ? AppColors.primary : AppColors.textLight),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color:
-                    isSelected ? AppColors.primary : AppColors.textDark,
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: isExporting ? null : onExport,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: format.color,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              icon: isExporting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  : Icon(format.icon, size: 18, color: Colors.white),
+              label: Text(
+                isExporting
+                    ? 'Generating ${format.label}…'
+                    : 'Download ${format.label}',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
               ),
             ),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                  fontSize: 10, color: AppColors.textMuted),
-              textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Large exports may take a few moments to generate.',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: AppColors.textMuted,
             ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
 }
+
+// ── Date Input ─────────────────────────────────────────────────────────────────
 
 class _DateInput extends StatelessWidget {
   final String label;
@@ -455,188 +798,107 @@ class _DateInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.8,
-            color: AppColors.textLight,
-          ),
+    return TextField(
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: 'Pick date',
+        hintStyle: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted),
+        suffixIcon: const Icon(Icons.calendar_today_outlined,
+            size: 14, color: AppColors.textMuted),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
-        const SizedBox(height: 6),
-        TextField(
-          readOnly: true,
-          decoration: InputDecoration(
-            hintText: 'mm/dd/yyyy',
-            suffixIcon: const Icon(Icons.calendar_today_outlined,
-                size: 16, color: AppColors.textMuted),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            filled: true,
-            fillColor: AppColors.background,
-          ),
-          style: const TextStyle(fontSize: 13),
-          onTap: () async {
-            await showDatePicker(
-              context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime(2020),
-              lastDate: DateTime.now(),
-            );
-          },
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
-      ],
-    );
-  }
-}
-
-class _QuickDateChip extends StatelessWidget {
-  final String label;
-  final String value;
-  final String selected;
-  final ValueChanged<String> onSelect;
-
-  const _QuickDateChip({
-    required this.label,
-    required this.value,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isSelected = selected == value;
-    return GestureDetector(
-      onTap: () => onSelect(value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.background,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textMed,
-          ),
-        ),
+        filled: true,
+        fillColor: AppColors.background,
       ),
+      style: GoogleFonts.inter(fontSize: 13),
+      onTap: () async {
+        await showDatePicker(
+          context: context,
+          initialDate: DateTime.now(),
+          firstDate: DateTime(2020),
+          lastDate: DateTime.now(),
+        );
+      },
     );
   }
 }
+
+// ── Field Check Row ────────────────────────────────────────────────────────────
 
 class _FieldCheckRow extends StatelessWidget {
   final String id;
   final String label;
-  final String subtitle;
+  final String badge;
+  final Color badgeColor;
   final bool value;
   final ValueChanged<bool?> onChanged;
 
   const _FieldCheckRow({
     required this.id,
     required this.label,
-    required this.subtitle,
+    required this.badge,
+    required this.badgeColor,
     required this.value,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Checkbox(value: value, onChanged: onChanged),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textDark),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                      fontSize: 11, color: AppColors.textLight),
-                ),
-              ],
+    return InkWell(
+      onTap: () => onChanged(!value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: Checkbox(
+                value: value,
+                onChanged: onChanged,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ExportHistoryItem extends StatelessWidget {
-  final String filename;
-  final String date;
-
-  const _ExportHistoryItem({required this.filename, required this.date});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.insert_drive_file_outlined,
-                size: 18, color: AppColors.textMed),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  filename,
-                  style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textDark),
-                  overflow: TextOverflow.ellipsis,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: value ? AppColors.textDark : AppColors.textMuted,
                 ),
-                Text(date,
-                    style: const TextStyle(
-                        fontSize: 11, color: AppColors.textLight)),
-              ],
+              ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.download_outlined,
-                size: 18, color: AppColors.primary),
-            onPressed: () {},
-          ),
-        ],
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              decoration: BoxDecoration(
+                color: badgeColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                badge,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: badgeColor,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

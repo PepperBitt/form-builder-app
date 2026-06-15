@@ -27,14 +27,24 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final forms = context.read<FormProvider>();
-      try {
-        setState(() =>
-            _form = forms.forms.firstWhere((f) => f.id == widget.formId));
-      } catch (_) {
-        if (forms.activeForm != null) setState(() => _form = forms.activeForm);
-      }
+      _loadForm();
     });
+  }
+
+  Future<void> _loadForm() async {
+    final forms = context.read<FormProvider>();
+    final active = forms.activeForm;
+
+    if (active != null &&
+        active.id == widget.formId &&
+        active.fields.isNotEmpty) {
+      setState(() => _form = active);
+      return;
+    }
+
+    await forms.loadFormById(widget.formId);
+    if (!mounted) return;
+    setState(() => _form = forms.activeForm);
   }
 
   Future<void> _handleSubmit() async {
@@ -77,11 +87,13 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: _form!.isLive ? AppColors.liveBackground : AppColors.draftBackground,
+              color: _form!.isLive
+                  ? AppColors.liveBackground
+                  : AppColors.draftBackground,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              _form!.isLive ? '● LIVE' : 'PREVIEW',
+              _form!.isLive ? 'LIVE' : 'PREVIEW',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -102,8 +114,9 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 1.5),
+                border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    width: 1.5),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,17 +182,17 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
             const SizedBox(height: 24),
 
             // Branding
-            Center(
+            const Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  Text(
                     'Powered by ',
                     style: TextStyle(fontSize: 12, color: AppColors.textMuted),
                   ),
                   Text(
                     appName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: AppColors.primary,
@@ -195,7 +208,7 @@ class _PublicFormScreenState extends State<PublicFormScreen> {
   }
 }
 
-// ── Success Screen ────────────────────────────────────────────────────────
+// Success Screen
 class _SuccessScreen extends StatelessWidget {
   final String formTitle;
   const _SuccessScreen({required this.formTitle});
@@ -213,7 +226,7 @@ class _SuccessScreen extends StatelessWidget {
               Container(
                 width: 80,
                 height: 80,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.liveBackground,
                   shape: BoxShape.circle,
                 ),
@@ -251,7 +264,7 @@ class _SuccessScreen extends StatelessWidget {
   }
 }
 
-// ── Architect Logo ─────────────────────────────────────────────────────────
+// Architect Logo
 class _ArchitectLogo extends StatelessWidget {
   const _ArchitectLogo();
 
@@ -262,8 +275,8 @@ class _ArchitectLogo extends StatelessWidget {
       children: [
         _GridIcon(),
         const SizedBox(width: 8),
-        Text(appName,
-            style: const TextStyle(
+        const Text(appName,
+            style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textDark)),

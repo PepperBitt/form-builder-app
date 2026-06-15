@@ -44,7 +44,9 @@ class _DynamicFieldState extends State<DynamicField> {
             case FieldType.longText:
             case FieldType.email:
             case FieldType.number:
-              if (_textCtrl.text.trim().isEmpty) return 'This field is required';
+              if (_textCtrl.text.trim().isEmpty) {
+                return 'This field is required';
+              }
               if (field.type == FieldType.email &&
                   !_textCtrl.text.contains('@')) {
                 return 'Enter a valid email';
@@ -140,8 +142,8 @@ class _DynamicFieldState extends State<DynamicField> {
                 const SizedBox(height: 4),
                 Text(
                   field.helperText,
-                  style: const TextStyle(
-                      fontSize: 12, color: AppColors.textLight),
+                  style:
+                      const TextStyle(fontSize: 12, color: AppColors.textLight),
                 ),
               ],
               const SizedBox(height: 12),
@@ -153,8 +155,7 @@ class _DynamicFieldState extends State<DynamicField> {
                 const SizedBox(height: 6),
                 Text(
                   state.errorText!,
-                  style: const TextStyle(
-                      fontSize: 12, color: AppColors.danger),
+                  style: const TextStyle(fontSize: 12, color: AppColors.danger),
                 ),
               ],
             ],
@@ -167,7 +168,8 @@ class _DynamicFieldState extends State<DynamicField> {
   Widget _buildInput(FieldModel field, FormFieldState state) {
     switch (field.type) {
       case FieldType.shortText:
-        return _TextInput(controller: _textCtrl, onChanged: (v) => state.didChange(v));
+        return _TextInput(
+            controller: _textCtrl, onChanged: (v) => state.didChange(v));
 
       case FieldType.longText:
         return _TextInput(
@@ -200,8 +202,7 @@ class _DynamicFieldState extends State<DynamicField> {
                   _OptionTile(
                     label: 'Option 1',
                     selected: _selectedOption == 'Option 1',
-                    onTap: () =>
-                        setState(() => _selectedOption = 'Option 1'),
+                    onTap: () => setState(() => _selectedOption = 'Option 1'),
                   ),
                 ]
               : field.options.map((opt) {
@@ -334,8 +335,8 @@ class _DynamicFieldState extends State<DynamicField> {
             decoration: BoxDecoration(
               color: AppColors.background,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                  color: AppColors.border, style: BorderStyle.solid),
+              border:
+                  Border.all(color: AppColors.border, style: BorderStyle.solid),
             ),
             child: const Column(
               children: [
@@ -351,8 +352,7 @@ class _DynamicFieldState extends State<DynamicField> {
                 ),
                 Text(
                   'or drag and drop',
-                  style:
-                      TextStyle(fontSize: 12, color: AppColors.textMuted),
+                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
                 ),
               ],
             ),
@@ -454,8 +454,7 @@ class _OptionTile extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 color: selected ? AppColors.primary : AppColors.textMed,
-                fontWeight:
-                    selected ? FontWeight.w500 : FontWeight.w400,
+                fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
               ),
             ),
           ],
@@ -482,7 +481,8 @@ class _CheckboxTile extends StatelessWidget {
       children: [
         Checkbox(value: selected, onChanged: onChanged),
         const SizedBox(width: 8),
-        Text(label, style: const TextStyle(fontSize: 14, color: AppColors.textMed)),
+        Text(label,
+            style: const TextStyle(fontSize: 14, color: AppColors.textMed)),
       ],
     );
   }
