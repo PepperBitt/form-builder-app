@@ -13,6 +13,7 @@ from app.schemas.form_schema import (
     FormSummary,
     FormUpdate,
     MessageResponse,
+    ShareLinkResponse,
 )
 from app.schemas.user_schema import ErrorResponse, PaginatedResponse
 from app.services import cache_service, form_service
@@ -85,6 +86,24 @@ def get_all_forms(
     )
     return [form_service._form_to_summary(form) for form in forms]
 
+
+# ── IMPORTANT: static-path GET routes must come BEFORE /{form_id} ──────────
+
+@router.get(
+    "/share/{share_token}",
+    response_model=FormDetail,
+    responses={403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    summary="Access a published form via its share token (public)",
+)
+def get_form_by_share_token(
+    share_token: str,
+    db: Session = Depends(get_db),
+):
+    form = form_service.get_form_by_share_token(db, share_token)
+    return form_service._form_to_detail(form)
+
+
+# ── Parameterised routes below ──────────────────────────────────────────────
 
 @router.get(
     "/{form_id}",
@@ -230,3 +249,27 @@ def save_draft(
     form = form_service.update_form(db, form, update_payload)
     cache_service.invalidate_form_cache(form_id)
     return form_service._form_to_detail(form)
+
+
+@router.post(
+    "/{form_id}/share",
+    response_model=ShareLinkResponse,
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
+    summary="Generate (or retrieve) a public share link for a form",
+)
+def get_share_link(
+    form_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    form = form_service.get_form_or_404(db, form_id)
+    form_service.ensure_form_owner(form, current_user)
+    form = form_service.generate_share_link(db, form)
+    return {
+        "share_token": form.share_token,
+        "share_url": form_service._build_share_url(form.share_token),
+    }

@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
+from app.models.form import Form
+from app.models.form_response import FormResponse
 from app.models.user import User
 from app.schemas.form_schema import FormSummary
 from app.schemas.user_schema import (
@@ -75,6 +77,67 @@ def update_settings_endpoint(
 
 
 @router.get(
+    "/analytics",
+    responses={401: {"model": ErrorResponse}},
+    summary="Get analytics dashboard data for the authenticated user",
+)
+def get_analytics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Returns real counts from the database for the current user's forms."""
+    base_query = db.query(Form).filter(
+        Form.user_id == current_user.id,
+        Form.deleted_at.is_(None),
+    )
+
+    total_forms: int = base_query.count()
+    published_forms: int = base_query.filter(Form.status == "published").count()
+
+    # Re-issue base query (without the published filter) to get all form ids
+    all_form_ids = [
+        row.id
+        for row in db.query(Form.id).filter(
+            Form.user_id == current_user.id,
+            Form.deleted_at.is_(None),
+        ).all()
+    ]
+
+    if all_form_ids:
+        total_responses: int = (
+            db.query(FormResponse)
+            .filter(FormResponse.form_id.in_(all_form_ids))
+            .count()
+        )
+        recent_raw = (
+            db.query(FormResponse)
+            .filter(FormResponse.form_id.in_(all_form_ids))
+            .order_by(FormResponse.submitted_at.desc())
+            .limit(10)
+            .all()
+        )
+    else:
+        total_responses = 0
+        recent_raw = []
+
+    recent_responses = [
+        {
+            "response_id": r.id,
+            "form_id": r.form_id,
+            "submitted_at": r.submitted_at,
+        }
+        for r in recent_raw
+    ]
+
+    return {
+        "total_forms": total_forms,
+        "published_forms": published_forms,
+        "total_responses": total_responses,
+        "recent_responses": recent_responses,
+    }
+
+
+@router.get(
     "/me/forms",
     response_model=PaginatedResponse[FormSummary],
     responses={401: {"model": ErrorResponse}},
@@ -103,3 +166,4 @@ def list_my_forms(
         "page_size": len(forms),
         "items": [form_service._form_to_summary(form) for form in forms],
     }
+

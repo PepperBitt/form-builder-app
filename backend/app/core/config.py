@@ -15,6 +15,8 @@ class Settings:
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "app/storage/uploads")
     EXPORT_DIR: str = os.getenv("EXPORT_DIR", "app/storage/exports")
+    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
+    BASE_URL: str = os.getenv("BASE_URL", "http://localhost:8000")
 
 
 @lru_cache

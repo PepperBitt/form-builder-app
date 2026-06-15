@@ -1,10 +1,13 @@
 from typing import Any, List, Optional
+import secrets
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.models.form import Form
 from app.models.form_field import FormField
+from app.models.form_response import FormResponse
 from app.models.user import User
 from app.schemas.form_schema import FormCreate, FormFieldSchema, FormUpdate
 
@@ -28,6 +31,21 @@ def _sync_form_fields(db: Session, form: Form, fields: List[FormFieldSchema]) ->
         )
 
 
+def _response_count(db_or_form: Any) -> int:
+    """Return the response count from the already-loaded relationship list."""
+    responses = getattr(db_or_form, "responses", None)
+    if responses is not None:
+        return len(responses)
+    return 0
+
+
+def _build_share_url(share_token: Optional[str]) -> Optional[str]:
+    if not share_token:
+        return None
+    settings = get_settings()
+    return f"{settings.BASE_URL}/api/forms/share/{share_token}"
+
+
 def _form_to_detail(form: Form) -> dict[str, Any]:
     return {
         "form_id": form.id,
@@ -35,6 +53,9 @@ def _form_to_detail(form: Form) -> dict[str, Any]:
         "description": form.description,
         "status": form.status,
         "schema": form.schema_data or {"fields": []},
+        "total_responses": _response_count(form),
+        "share_token": form.share_token,
+        "share_url": _build_share_url(form.share_token),
         "created_at": form.created_at,
         "updated_at": form.updated_at,
     }
@@ -46,9 +67,11 @@ def _form_to_summary(form: Form) -> dict[str, Any]:
         "title": form.title,
         "status": form.status,
         "description": form.description,
+        "total_responses": _response_count(form),
         "created_at": form.created_at,
         "updated_at": form.updated_at,
     }
+
 
 
 def get_form_or_404(db: Session, form_id: str, include_deleted: bool = False) -> Form:
@@ -144,4 +167,33 @@ def unpublish_form(db: Session, form: Form) -> Form:
     form.status = "draft"
     db.commit()
     db.refresh(form)
+    return form
+
+
+def generate_share_link(db: Session, form: Form) -> Form:
+    """Generate a unique share token for a form (idempotent — reuses existing token)."""
+    if not form.share_token:
+        token = secrets.token_urlsafe(16)
+        # Ensure uniqueness (collision is astronomically unlikely but be safe)
+        while db.query(Form).filter(Form.share_token == token).first():
+            token = secrets.token_urlsafe(16)
+        form.share_token = token
+        db.commit()
+        db.refresh(form)
+    return form
+
+
+def get_form_by_share_token(db: Session, share_token: str) -> Form:
+    form = (
+        db.query(Form)
+        .filter(Form.share_token == share_token, Form.deleted_at.is_(None))
+        .first()
+    )
+    if not form:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Form not found")
+    if form.status != "published":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This form is not publicly available",
+        )
     return form
