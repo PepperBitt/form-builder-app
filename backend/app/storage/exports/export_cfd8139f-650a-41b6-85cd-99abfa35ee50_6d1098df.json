@@ -1,0 +1,43 @@
+{
+  "form": {
+    "id": "cfd8139f-650a-41b6-85cd-99abfa35ee50",
+    "title": "Swagger Test Form",
+    "description": "A form created during automated swagger verification",
+    "status": "published",
+    "schema": {
+      "fields": [
+        {
+          "type": "text",
+          "label": "Name",
+          "required": true,
+          "options": null
+        },
+        {
+          "type": "email",
+          "label": "Email",
+          "required": true,
+          "options": null
+        },
+        {
+          "type": "text",
+          "label": "Feedback",
+          "required": false,
+          "options": null
+        }
+      ]
+    },
+    "created_at": "2026-06-16T14:49:29.634380",
+    "updated_at": "2026-06-16T14:49:29.767962"
+  },
+  "responses": [
+    {
+      "id": "1dc59060-4baf-4820-ad6f-dd001a8583f4",
+      "submitted_at": "2026-06-16T14:49:29.830487",
+      "answers": {
+        "Name": "Alice",
+        "Email": "alice@example.com",
+        "Feedback": "Great!"
+      }
+    }
+  ]
+}

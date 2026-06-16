@@ -98,10 +98,13 @@ def google_login(payload: GoogleLoginRequest, db: Session = Depends(get_db)):
     Accepts a Google ID token (obtained client-side via Google Sign-In SDK),
     verifies it, then creates or retrieves the user and returns a JWT.
     """
-    if not settings.GOOGLE_CLIENT_ID:
+    if not settings.google_oauth_configured:
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Google login is not configured on this server",
+            detail=(
+                "Google login is not configured on this server. "
+                "Set GOOGLE_CLIENT_ID in the backend .env to a valid Google OAuth client ID."
+            ),
         )
 
     try:

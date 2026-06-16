@@ -21,6 +21,16 @@ class Settings:
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
     BASE_URL: str = os.getenv("BASE_URL", "http://localhost:8000")
 
+    @property
+    def google_oauth_configured(self) -> bool:
+        if not self.GOOGLE_CLIENT_ID:
+            return False
+        placeholder_values = [
+            "your-google-oauth-client-id.apps.googleusercontent.com",
+            "your-google-oauth-client-id",
+        ]
+        return not any(placeholder in self.GOOGLE_CLIENT_ID for placeholder in placeholder_values)
+
 
 @lru_cache
 def get_settings() -> Settings:

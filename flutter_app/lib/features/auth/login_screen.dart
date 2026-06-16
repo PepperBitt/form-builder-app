@@ -59,6 +59,14 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  Future<void> _handleGoogleLogin() async {
+    final auth = context.read<AuthProvider>();
+    final success = await auth.loginWithGoogle();
+    if (mounted && success) {
+      context.go('/dashboard');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -183,7 +191,28 @@ class _LoginScreenState extends State<LoginScreen>
                                   children: [
                                     const _FieldLabel('PASSWORD'),
                                     TextButton(
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        showDialog<void>(
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              title:
+                                                  const Text('Forgot Password'),
+                                              content: const Text(
+                                                'Password reset is not available in this demo.\nPlease contact your administrator or use Google sign-in if available.',
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop(),
+                                                  child: const Text('Close'),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
                                       style: TextButton.styleFrom(
                                         padding: EdgeInsets.zero,
                                         minimumSize: Size.zero,
@@ -305,7 +334,9 @@ class _LoginScreenState extends State<LoginScreen>
                                   width: double.infinity,
                                   height: 50,
                                   child: OutlinedButton(
-                                    onPressed: () {},
+                                    onPressed: auth.isLoading
+                                        ? null
+                                        : _handleGoogleLogin,
                                     style: OutlinedButton.styleFrom(
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),

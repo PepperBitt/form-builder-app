@@ -15,6 +15,16 @@
 /// like `backend:8000`.
 class ApiConstants {
   static const String baseUrl = 'http://localhost:8000';
+  static const String googleClientId =
+      'your-google-oauth-client-id.apps.googleusercontent.com';
+
+  /// Google Sign-In client ID for web and iOS/macOS.
+  /// On Android, the plugin typically uses native app credentials and SHA-1
+  /// configuration instead of an explicit client ID.
+  static bool get googleClientIdConfigured {
+    return googleClientId.isNotEmpty &&
+        !googleClientId.contains('your-google-oauth-client-id');
+  }
 
   /// Public frontend base URL used for share links.
   /// On Flutter Web, prefer Uri.base.origin at runtime.
@@ -25,10 +35,12 @@ class ApiConstants {
   // Backend login expects form-data (OAuth2PasswordRequestForm), not JSON.
   static const String login = '/api/auth/login';
   static const String signup = '/api/auth/signup';
+  static const String googleLogin = '/api/auth/google';
 
   // --- Users / Profile ---
   static const String userProfile = '/api/users/profile';
   static const String userSettings = '/api/users/settings';
+  static const String userAnalytics = '/api/users/analytics';
   static const String userForms = '/api/users/me/forms';
 
   // --- Forms ---

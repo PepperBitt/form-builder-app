@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../providers/form_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
+import '../../providers/analytics_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/models.dart';
 import '../../widgets/app_logo.dart';
@@ -19,12 +20,15 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  bool _isGridView = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<FormProvider>().fetchForms();
       context.read<NotificationProvider>().loadNotifications();
+      context.read<AnalyticsProvider>().loadDashboardData();
     });
   }
 
@@ -33,6 +37,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final forms = context.watch<FormProvider>();
     final auth = context.watch<AuthProvider>();
     final notifProv = context.watch<NotificationProvider>();
+    final analytics = context.watch<AnalyticsProvider>();
     final userName = auth.currentUser?.name ?? '';
 
     return Scaffold(
@@ -47,8 +52,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
               IconButton(
                 icon: const Icon(Icons.notifications_outlined),
                 color: AppColors.textLight,
-                onPressed: () {
-                  notifProv.markAllRead();
+                onPressed: () async {
+                  await context
+                      .read<NotificationProvider>()
+                      .loadNotifications();
+                  if (!context.mounted) return;
+                  final notifications =
+                      context.read<NotificationProvider>().notifications;
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: AppColors.background,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (_) {
+                      return Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Notifications',
+                                style: GoogleFonts.inter(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textDark,
+                                )),
+                            const SizedBox(height: 12),
+                            if (notifications.isEmpty)
+                              Text('No new notifications.',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    color: AppColors.textLight,
+                                  ))
+                            else
+                              ...notifications.take(6).map((n) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: _NotificationItem(notification: n),
+                                  )),
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () async {
+                                  await context
+                                      .read<NotificationProvider>()
+                                      .markAllRead();
+                                  if (context.mounted)
+                                    Navigator.of(context).pop();
+                                },
+                                child: const Text('Mark all read'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
                 },
                 tooltip: 'Notifications',
               ),
@@ -69,9 +130,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: _UserAvatar(
-              name: userName,
-              avatarUrl: auth.currentUser?.avatarUrl,
+            child: GestureDetector(
+              onTap: () => context.go('/profile'),
+              child: _UserAvatar(
+                name: userName,
+                avatarUrl: auth.currentUser?.avatarUrl,
+              ),
             ),
           ),
         ],
@@ -82,6 +146,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           await Future.wait([
             context.read<FormProvider>().fetchForms(),
             context.read<NotificationProvider>().loadNotifications(),
+            context.read<AnalyticsProvider>().loadDashboardData(),
           ]);
         },
         child: CustomScrollView(
@@ -153,15 +218,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           child: _StatCard(
                             icon: Icons.inbox_rounded,
                             label: 'TOTAL RESPONSES',
-                            value: forms.totalResponses.toString(),
+                            value: analytics.totalResponses.toString(),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: _StatCard(
-                            icon: Icons.article_rounded,
-                            label: 'Total Forms',
-                            value: forms.forms.length.toString(),
+                            icon: Icons.public,
+                            label: 'LIVE FORMS',
+                            value: analytics.publishedForms.toString(),
                           ),
                         ),
                       ],
@@ -190,13 +255,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             children: [
                               _ViewToggleBtn(
                                 icon: Icons.grid_view_rounded,
-                                selected: false,
-                                onTap: () {},
+                                selected: _isGridView,
+                                onTap: () => setState(() => _isGridView = true),
                               ),
                               _ViewToggleBtn(
                                 icon: Icons.list_rounded,
-                                selected: true,
-                                onTap: () {},
+                                selected: !_isGridView,
+                                onTap: () =>
+                                    setState(() => _isGridView = false),
                               ),
                             ],
                           ),
@@ -249,19 +315,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Forms list
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final form = forms.forms[index];
-                      return Padding(
-                        padding: EdgeInsets.only(
-                            bottom: index == forms.forms.length - 1 ? 0 : 10),
-                        child: _FormCard(form: form),
-                      );
-                    },
-                    childCount: forms.forms.length,
-                  ),
-                ),
+                sliver: _isGridView
+                    ? SliverGrid(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final form = forms.forms[index];
+                            return _FormCard(form: form);
+                          },
+                          childCount: forms.forms.length,
+                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.92,
+                        ),
+                      )
+                    : SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final form = forms.forms[index];
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                  bottom:
+                                      index == forms.forms.length - 1 ? 0 : 10),
+                              child: _FormCard(form: form),
+                            );
+                          },
+                          childCount: forms.forms.length,
+                        ),
+                      ),
               ),
 
               // Recent Activity
@@ -282,23 +366,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           ),
                           const Spacer(),
-                          if (notifProv.unreadCount > 0)
-                            TextButton(
-                              onPressed: notifProv.markAllRead,
-                              child: Text(
-                                'Mark all read',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  color: AppColors.primary,
-                                ),
+                          TextButton(
+                            onPressed: () => context
+                                .read<AnalyticsProvider>()
+                                .loadDashboardData(),
+                            child: Text(
+                              'Refresh',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.primary,
                               ),
                             ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
-
-                      // Notification items or empty state
-                      if (notifProv.isLoading)
+                      if (analytics.error != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Text(
+                            analytics.error!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      if (analytics.isLoading)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 24),
                           child: Center(
@@ -308,63 +399,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           ),
                         )
-                      else if (notifProv.notifications.isEmpty)
+                      else if (analytics.recentActivity.isEmpty)
                         _buildEmptyActivity()
                       else ...[
-                        ...notifProv.notifications
-                            .take(5)
-                            .map((n) => _NotificationItem(notification: n)),
+                        ...analytics.recentActivity.take(5).map((activity) =>
+                            _ActivityListItem(activity: activity)),
                       ],
-
-                      const SizedBox(height: 20),
-
-                      // Upgrade to Pro card
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Upgrade to Pro',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'Unlock conditional logic, white-labeling and unlimited responses.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.white70,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: const Color(0xFF1E3A8A),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 12),
-                                textStyle: const TextStyle(
-                                    fontWeight: FontWeight.w600, fontSize: 14),
-                              ),
-                              child: const Text('Upgrade Workspace'),
-                            ),
-                          ],
-                        ),
-                      ),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -423,6 +463,81 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 // ── Notification Item ──────────────────────────────────────────────────────────
+
+class _ActivityListItem extends StatelessWidget {
+  final ActivityItem activity;
+  const _ActivityListItem({required this.activity});
+
+  @override
+  Widget build(BuildContext context) {
+    final submittedAt = DateTime.tryParse(activity.time) ?? DateTime.now();
+    final timeAgo = _formatTimeAgo(submittedAt);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    activity.message,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    activity.formName,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textLight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              timeAgo,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatTimeAgo(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return DateFormat('MMM d').format(dt);
+  }
+}
 
 class _NotificationItem extends StatelessWidget {
   final NotificationModel notification;

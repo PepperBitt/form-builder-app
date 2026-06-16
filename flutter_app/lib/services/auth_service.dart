@@ -24,6 +24,16 @@ class AuthService {
     });
   }
 
+  Future<String> loginWithGoogle(String idToken) async {
+    final data = await _api.post(ApiConstants.googleLogin, body: {
+      'id_token': idToken,
+    }) as Map<String, dynamic>;
+
+    final token = data['access_token'] as String;
+    _api.setAuthToken(token);
+    return token;
+  }
+
   /// GET /api/users/profile — returns the backend profile for the logged-in user.
   Future<Map<String, dynamic>> getProfile() async {
     final res = await _api.get(ApiConstants.userProfile);

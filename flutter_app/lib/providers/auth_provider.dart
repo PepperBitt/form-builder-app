@@ -1,9 +1,18 @@
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../core/constants/api_constants.dart';
 import '../core/models.dart';
 import '../services/auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final _authService = AuthService();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile', 'openid'],
+    clientId: _resolveGoogleClientId(),
+    serverClientId: _resolveGoogleClientId(),
+  );
 
   UserModel? _currentUser;
   bool _isLoggedIn = false;
@@ -48,6 +57,52 @@ class AuthProvider extends ChangeNotifier {
       // Fetch real profile (name may not be set yet, so use provided name as
       // fallback until the user saves their profile).
       await _fetchProfile(fallbackEmail: email, fallbackName: name);
+      _isLoggedIn = true;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> loginWithGoogle() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      if ((kIsWeb ||
+              defaultTargetPlatform == TargetPlatform.iOS ||
+              defaultTargetPlatform == TargetPlatform.macOS) &&
+          !_isGoogleClientIdConfigured) {
+        throw Exception(
+          'Google sign-in is not configured. Set ApiConstants.googleClientId in flutter_app/lib/core/constants/api_constants.dart.',
+        );
+      }
+
+      final account = await _googleSignIn.signIn();
+      if (account == null) {
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw Exception('Google sign-in did not return an ID token.');
+      }
+
+      await _authService.loginWithGoogle(idToken);
+      await _fetchProfile(
+        fallbackEmail: account.email,
+        fallbackName: account.displayName,
+      );
+
       _isLoggedIn = true;
       _isLoading = false;
       notifyListeners();
@@ -107,6 +162,19 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  static String? _resolveGoogleClientId() {
+    if (kIsWeb ||
+        defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
+      return ApiConstants.googleClientId;
+    }
+    return null;
+  }
+
+  static bool get _isGoogleClientIdConfigured {
+    return ApiConstants.googleClientIdConfigured;
   }
 
   // ---------------------------------------------------------------------------
