@@ -9,6 +9,7 @@ import 'providers/response_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/analytics_provider.dart';
+import 'providers/user_provider.dart';
 
 /// The display name of the application.
 /// Change this single value to rename the app everywhere.
@@ -27,6 +28,7 @@ class TheArchitectApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, auth, _) {

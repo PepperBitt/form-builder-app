@@ -46,6 +46,9 @@ class ApiConstants {
   // --- Forms ---
   static const String createForm = '/api/forms/create';
 
+  /// GET /api/forms/ — all published (live) forms (public, no auth required)
+  static const String publicForms = '/api/forms/';
+
   /// GET /api/forms/{id}
   static String getForm(String id) => '/api/forms/$id';
 

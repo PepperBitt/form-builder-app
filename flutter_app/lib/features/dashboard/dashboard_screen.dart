@@ -191,23 +191,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Create New Form button
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        forms.createNewForm();
-                        if (forms.activeForm != null) {
-                          context.push('/builder/${forms.activeForm!.id}');
-                        }
-                      },
-                      icon: const Icon(Icons.add_rounded, size: 20),
-                      label: const Text('Create New Form'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                    // Action buttons row
+                    Row(
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            forms.createNewForm();
+                            if (forms.activeForm != null) {
+                              context.push('/builder/${forms.activeForm!.id}');
+                            }
+                          },
+                          icon: const Icon(Icons.add_rounded, size: 20),
+                          label: const Text('Create New Form'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        OutlinedButton.icon(
+                          onPressed: () => context.push('/browse'),
+                          icon: const Icon(Icons.explore_outlined, size: 18),
+                          label: const Text('Browse Live'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: AppColors.primary),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 20),
 

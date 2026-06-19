@@ -15,6 +15,7 @@ import '../../features/onboarding/splash_screen.dart';
 import '../../features/onboarding/welcome_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/browse/browse_forms_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -146,6 +147,13 @@ class AppRouter {
           final formId = state.pathParameters['formId']!;
           return PublicFormScreen(formId: formId);
         },
+      ),
+
+      // ── Browse all live forms ─────────────────────────────────────────────────
+      GoRoute(
+        path: '/browse',
+        name: 'browse',
+        builder: (context, state) => const BrowseFormsScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

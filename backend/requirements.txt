@@ -21,6 +21,7 @@ python-jose[cryptography]
 python-multipart
 redis
 reportlab==4.4.10
+requests
 sqlalchemy
 starlette==1.0.0
 typing-inspection==0.4.2

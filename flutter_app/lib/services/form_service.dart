@@ -95,6 +95,25 @@ class FormService {
     }).toList();
   }
 
+  /// GET /api/forms/ — all publicly visible published forms (no auth needed).
+  Future<List<FormModel>> fetchPublicForms() async {
+    final res = await _api.get(ApiConstants.publicForms);
+    final items = res is List<dynamic> ? res : <dynamic>[];
+    return items.map((item) {
+      final m = item as Map<String, dynamic>;
+      return FormModel(
+        id: m['form_id'] as String,
+        title: (m['title'] ?? 'Untitled') as String,
+        description: (m['description'] ?? '') as String,
+        fields: const [],
+        isLive: true,
+        responseCount: (m['total_responses'] ?? m['response_count'] ?? 0) as int,
+        createdAt: DateTime.tryParse(m['created_at']?.toString() ?? '') ??
+            DateTime.now(),
+      );
+    }).toList();
+  }
+
   /// GET /api/forms/{id} — fetches full schema including fields.
   Future<FormModel> getForm(String formId) async {
     final res =

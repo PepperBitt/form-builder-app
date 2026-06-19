@@ -6,6 +6,7 @@ class FormProvider extends ChangeNotifier {
   final _formService = FormService();
 
   List<FormModel> _forms = [];
+  List<FormModel> _publicForms = [];
   FormModel? _activeForm;
   FieldModel? _selectedField;
   bool _isLoading = false;
@@ -13,6 +14,7 @@ class FormProvider extends ChangeNotifier {
   String? _error;
 
   List<FormModel> get forms => _forms;
+  List<FormModel> get publicForms => _publicForms;
   FormModel? get activeForm => _activeForm;
   FieldModel? get selectedField => _selectedField;
   bool get isLoading => _isLoading;
@@ -36,6 +38,19 @@ class FormProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> fetchPublicForms() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      _publicForms = await _formService.fetchPublicForms();
+    } catch (e) {
+      _error = e.toString();
+    }
+    _isLoading = false;
+    notifyListeners();
+  }
+
   Future<void> loadFormById(String formId) async {
     _isLoading = true;
     notifyListeners();
@@ -48,6 +63,18 @@ class FormProvider extends ChangeNotifier {
     }
     _isLoading = false;
     notifyListeners();
+  }
+
+  /// Fetches a complete form without changing the form currently open in the
+  /// builder. List-form records do not include their field definitions.
+  Future<FormModel?> fetchFormDetails(String formId) async {
+    try {
+      return await _formService.getForm(formId);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return null;
+    }
   }
 
   // ── Builder (local UI state — synced to backend on saveForm) ────
