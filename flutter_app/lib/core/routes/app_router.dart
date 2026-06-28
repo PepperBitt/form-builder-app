@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 
-import '../../features/auth/login_screen.dart';
-import '../../features/auth/signup_screen.dart';
+
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/builder/form_builder_screen.dart';
 import '../../features/export/export_screen.dart';
@@ -16,7 +14,6 @@ import '../../features/onboarding/welcome_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/browse/browse_forms_screen.dart';
-import '../../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 
 class AppRouter {
@@ -24,24 +21,7 @@ class AppRouter {
 
   static final GoRouter _router = GoRouter(
     initialLocation: '/splash',
-    redirect: (context, state) {
-      final auth = context.read<AuthProvider>();
-      final isLoggedIn = auth.isLoggedIn;
-      final loc = state.matchedLocation;
 
-      // Always allow splash through
-      if (loc == '/splash') return null;
-
-      // Welcome only for authenticated users
-      if (loc == '/welcome' && !isLoggedIn) return '/login';
-
-      // Auth screens
-      final isOnAuth = loc == '/login' || loc == '/signup';
-      if (!isLoggedIn && !isOnAuth) return '/login';
-      if (isLoggedIn && isOnAuth) return '/dashboard';
-
-      return null;
-    },
     routes: [
       // ── Onboarding ──────────────────────────────────────────────────────────
       GoRoute(
@@ -59,21 +39,7 @@ class AppRouter {
         ),
       ),
 
-      // ── Auth ────────────────────────────────────────────────────────────────
-      GoRoute(
-        path: '/login',
-        name: 'login',
-        pageBuilder: (context, state) => const NoTransitionPage(
-          child: LoginScreen(),
-        ),
-      ),
-      GoRoute(
-        path: '/signup',
-        name: 'signup',
-        pageBuilder: (context, state) => const NoTransitionPage(
-          child: SignupScreen(),
-        ),
-      ),
+
 
       // ── Main shell with bottom navigation ───────────────────────────────────
       StatefulShellRoute.indexedStack(

@@ -22,6 +22,7 @@ class TheArchitectApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => FormProvider()),
         ChangeNotifierProvider(create: (_) => ResponseProvider()),
@@ -30,15 +31,11 @@ class TheArchitectApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
-      child: Consumer<AuthProvider>(
-        builder: (context, auth, _) {
-          return MaterialApp.router(
-            title: appName,
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.theme,
-            routerConfig: AppRouter.router,
-          );
-        },
+      child: MaterialApp.router(
+        title: appName,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.theme,
+        routerConfig: AppRouter.router,
       ),
     );
   }
