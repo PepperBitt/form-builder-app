@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'core/theme/app_theme.dart';
-import 'core/routes/app_router.dart';
-import 'providers/auth_provider.dart';
-import 'providers/form_provider.dart';
-import 'providers/response_provider.dart';
-import 'providers/notification_provider.dart';
-import 'providers/settings_provider.dart';
-import 'providers/analytics_provider.dart';
-import 'providers/user_provider.dart';
+import 'theme/app_theme.dart';
+import 'routes/app_router.dart';
+import 'notifiers/auth_provider.dart';
+import 'notifiers/form_provider.dart';
+import 'notifiers/response_provider.dart';
+import 'notifiers/notification_provider.dart';
+import 'notifiers/settings_provider.dart';
+import 'notifiers/analytics_provider.dart';
+import 'notifiers/user_provider.dart';
 
 /// The display name of the application.
 /// Change this single value to rename the app everywhere.
