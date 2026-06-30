@@ -85,6 +85,9 @@ def get_form_or_404(db: Session, form_id: str, include_deleted: bool = False) ->
 
 
 def ensure_form_owner(form: Form, user: User) -> None:
+    from app.core.dependencies import BYPASS_AUTH
+    if BYPASS_AUTH:
+        return
     if form.user_id != user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
