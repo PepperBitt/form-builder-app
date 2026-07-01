@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../../core/models.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../models/models.dart';
+import '../../../theme/app_theme.dart';
 import '../../../services/upload_service.dart';
 import 'package:flutter/foundation.dart';
 

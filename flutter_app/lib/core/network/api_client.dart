@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../constants/api_constants.dart';
+import '../../api_services/api_constants.dart';
 
 /// Thin wrapper around `http` that:
 ///  - prepends the baseUrl
